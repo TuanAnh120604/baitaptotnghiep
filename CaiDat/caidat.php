@@ -106,7 +106,7 @@ if ($user) {
     <!-- MÃ NGƯỜI DÙNG -->
     <div class="space-y-2">
         <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Mã Người Dùng
+            Mã người dùng
         </label>
         <input
             type="text"
@@ -120,7 +120,7 @@ if ($user) {
     <!-- HỌ TÊN -->
     <div class="space-y-2">
         <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Họ Và Tên
+            Họ và tên
         </label>
         <input
             name="ho_ten"
@@ -135,7 +135,7 @@ if ($user) {
     <!-- CHỨC VỤ -->
     <div class="space-y-2">
         <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Chức Vụ
+            Chức vụ
         </label>
         <input
             type="text"
@@ -149,7 +149,7 @@ if ($user) {
     <!-- MẬT KHẨU -->
     <div class="space-y-2 relative">
         <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Mật Khẩu (để trống nếu không đổi)
+            Mật khẩu (để trống nếu không đổi)
         </label>
         <input
             name="mat_khau"

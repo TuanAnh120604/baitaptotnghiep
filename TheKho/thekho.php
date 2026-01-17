@@ -212,7 +212,7 @@ if ($is_ajax) {
                     <div class="relative">
                         <select id="filter-kho"
                             class="pl-3 pr-10 py-2 rounded-lg border ... appearance-none cursor-pointer">
-                            <option value="">Tất cả Kho</option>
+                            <option value="">Tất cả kho</option>
                             <?php
                             foreach ($kho_list as $k) {
                                 $selected = ($ma_kho_filter === $k['ma_kho']) ? 'selected' : '';
@@ -226,7 +226,7 @@ if ($is_ajax) {
                     <div class="relative">
                         <select id="filter-loai"
                             class="pl-3 pr-10 py-2 rounded-lg border ... appearance-none cursor-pointer">
-                            <option value="">Tất cả Loại Hàng</option>
+                            <option value="">Tất cả loại hàng</option>
                             <?php
                             foreach ($loai_hang_list as $l) {
                                 $selected = ($ma_loai_hang_filter === $l['ma_loai_hang']) ? 'selected' : '';

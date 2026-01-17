@@ -147,7 +147,7 @@ $vat_tu_list = $stmt2->fetchAll(PDO::FETCH_ASSOC);
                 <div class="max-w-[1200px] mx-auto flex flex-col gap-6">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <h1 class="text-2xl font-bold text-[#111418] dark:text-white tracking-tight">Danh sách Vật
+                            <h1 class="text-2xl font-bold text-[#111418] dark:text-white tracking-tight">Danh sách vật
                                 tư</h1>
                         </div>
                         <div class="flex flex-wrap items-center gap-3">
@@ -385,7 +385,7 @@ $vat_tu_list = $stmt2->fetchAll(PDO::FETCH_ASSOC);
                             </select>
                         </div>
                         <div class="flex flex-col gap-1.5">
-                            <label class="text-sm font-medium text-[#111418] dark:text-white">Tên Hàng <span class="text-red-500">*</span></label>
+                            <label class="text-sm font-medium text-[#111418] dark:text-white">Tên hàng <span class="text-red-500">*</span></label>
                             <input name="ten_hang" id="add_ten_hang" required
                                 class="h-10 px-3 rounded-lg border border-[#dce0e5] dark:border-[#2a3b4d] bg-white dark:bg-[#0d141c] text-[#111418] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-[#637588] dark:placeholder:text-[#64748b]"
                                 placeholder="Nhập tên" type="text" />
@@ -450,7 +450,7 @@ $vat_tu_list = $stmt2->fetchAll(PDO::FETCH_ASSOC);
         <div
             class="bg-white dark:bg-[#1a2632] w-full max-w-2xl rounded-xl shadow-2xl border border-[#e5e7eb] dark:border-[#2a3b4d] flex flex-col max-h-[90vh]">
             <div class="flex items-center justify-between p-6 border-b border-[#e5e7eb] dark:border-[#2a3b4d]">
-                <h3 class="text-xl font-bold text-[#111418] dark:text-white">Chỉnh sửa Vật tư</h3>
+                <h3 class="text-xl font-bold text-[#111418] dark:text-white">Chỉnh sửa vật tư</h3>
                 <button onclick="closeEditModal()"
                     class="text-[#637588] hover:text-[#111418] dark:text-[#9ca3af] dark:hover:text-white transition-colors">
                     <span class="material-symbols-outlined">close</span>
@@ -463,13 +463,13 @@ $vat_tu_list = $stmt2->fetchAll(PDO::FETCH_ASSOC);
                 <div class="p-6 overflow-y-auto">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="flex flex-col gap-1.5">
-                            <label class="text-sm font-medium text-[#111418] dark:text-white">Mã Vật tư</label>
+                            <label class="text-sm font-medium text-[#111418] dark:text-white">Mã vật tư</label>
                             <input id="edit_ma_hang_display" disabled
                                 class="h-10 px-3 rounded-lg border border-[#dce0e5] dark:border-[#2a3b4d] bg-gray-100 dark:bg-[#243447] text-[#637588] dark:text-[#9ca3af] text-sm cursor-not-allowed">
                         </div>
 
                         <div class="flex flex-col gap-1.5">
-                            <label class="text-sm font-medium text-[#111418] dark:text-white">Tên Vật tư <span class="text-red-500">*</span></label>
+                            <label class="text-sm font-medium text-[#111418] dark:text-white">Tên vật tư <span class="text-red-500">*</span></label>
                             <input name="ten_hang" id="edit_ten_hang" required
                                 class="h-10 px-3 rounded-lg border border-[#dce0e5] dark:border-[#2a3b4d] bg-white dark:bg-[#0d141c] text-[#111418] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
                             <p id="edit_ten_hang_error" class="mt-1 text-sm text-red-600 dark:text-red-400 hidden">Vui lòng nhập tên vật tư</p>

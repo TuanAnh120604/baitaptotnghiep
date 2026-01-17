@@ -199,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="phieunhap.php" class="text-text-secondary hover:text-primary">
                     <span class="material-symbols-outlined">arrow_back</span>
                 </a>
-                <h1 class="text-xl font-bold">Thêm Phiếu Nhập Kho</h1>
+                <h1 class="text-xl font-bold">Thêm phiếu nhập kho</h1>
             </div>
         </header>
 
@@ -213,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         class="flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-primary text-white shadow-sm">
                         <span class="flex items-center justify-center gap-2">
                             <span class="material-symbols-outlined text-[20px]">inventory_2</span>
-                            Nhập Vật Tư
+                            Nhập vật tư
                         </span>
                     </button>
                     <button type="button"
@@ -222,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         class="flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-transparent text-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800">
                         <span class="flex items-center justify-center gap-2">
                             <span class="material-symbols-outlined text-[20px]">category</span>
-                            Nhập Thành Phẩm
+                            Nhập thành phẩm
                         </span>
                     </button>
                 </div>

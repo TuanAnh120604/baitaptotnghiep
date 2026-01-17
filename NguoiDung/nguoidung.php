@@ -162,7 +162,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                 class="flex-1 overflow-x-hidden overflow-y-auto bg-background-light dark:bg-background-dark p-6 transition-colors duration-200">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
                     <div>
-                        <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Danh sách Người dùng</h1>
+                        <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Danh sách người dùng</h1>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <?php if (canCreate('nguoidung')): ?>
@@ -266,7 +266,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                 <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                                     <h3 class="text-lg leading-6 font-medium text-slate-900 dark:text-slate-100"
                                         id="modal-title">
-                                        Thêm Người dùng Mới
+                                        Thêm người dùng mới
                                     </h3>
                                     <form id="addUserForm" method="POST" action="add_nguoidung.php"
                                         class="mt-4 space-y-4">

@@ -246,7 +246,7 @@ if ($end_page - $start_page < $max_pages_to_show - 1) {
                 <button onclick="openModal()"
                     class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors w-full md:w-auto">
                     <span class="material-icons mr-2 text-base">add</span>
-                    Thêm Kho Mới
+                    Thêm kho mới
                 </button>
                 <?php endif; ?>
             </div>

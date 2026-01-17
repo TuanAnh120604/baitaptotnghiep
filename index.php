@@ -86,7 +86,7 @@ checkAccess('thongke');
             <!-- Header & Controls -->
             <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between mb-6 gap-4">
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">Báo cáo Thống kê Kho</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">Báo cáo thống kê kho</h1>
                     <p class="text-slate-500 dark:text-slate-400 mt-1">Tổng quan nhập - xuất - tồn kho theo loại kho</p>
                 </div>
 
@@ -135,7 +135,7 @@ checkAccess('thongke');
                                 <span class="material-icons-round text-slate-400 text-lg" style="font-size: 18px;">drag_indicator</span>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Biến động Tổng Nhập - Xuất</h3>
+                                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Biến động tổng nhập - xuất</h3>
                                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" id="chartPeriodTitle">Dữ liệu theo tháng</p>
                             </div>
                         </div>
@@ -198,7 +198,7 @@ checkAccess('thongke');
             <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
                 <div class="p-6 border-b border-border-light dark:border-border-dark flex flex-col md:flex-row justify-between md:items-center gap-4">
                     <div>
-                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">Bảng cân đối Nhập - Xuất - Tồn</h3>
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">Bảng cân đối nhập - xuất - tồn</h3>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Chi tiết tồn kho theo mặt hàng và kho</p>
                     </div>
                     <div class="flex items-center gap-3">
@@ -220,8 +220,8 @@ checkAccess('thongke');
                                 <th class="px-6 py-4">Kho</th>
                                 <th class="px-6 py-4 text-center">ĐVT</th>
                                 <th class="px-6 py-4 text-right bg-blue-50/40 dark:bg-blue-900/20">Tồn đầu</th>
-                                <th class="px-6 py-4 text-right bg-green-50/40 dark:bg-green-900/20">Tổng Nhập</th>
-                                <th class="px-6 py-4 text-right bg-amber-50/40 dark:bg-amber-900/20">Tổng Xuất</th>
+                                <th class="px-6 py-4 text-right bg-green-50/40 dark:bg-green-900/20">Tổng nhập</th>
+                                <th class="px-6 py-4 text-right bg-amber-50/40 dark:bg-amber-900/20">Tổng xuất</th>
                                 <th class="px-6 py-4 text-right font-bold bg-slate-100/60 dark:bg-slate-700/30 border-l border-border-light dark:border-border-dark">Tồn cuối</th>
                             </tr>
                         </thead>

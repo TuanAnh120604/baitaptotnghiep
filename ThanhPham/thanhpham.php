@@ -169,7 +169,7 @@ $end_record = min($offset + $items_per_page, $total_records);
                 <div class="max-w-[1200px] mx-auto flex flex-col gap-6">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <h1 class="text-2xl font-bold text-[#111418] dark:text-white tracking-tight">Danh sách Thành
+                            <h1 class="text-2xl font-bold text-[#111418] dark:text-white tracking-tight">Danh sách thành
                                 phẩm</h1>
                         </div>
                         <div class="flex flex-wrap items-center gap-3">
@@ -382,7 +382,7 @@ $end_record = min($offset + $items_per_page, $total_records);
                         <input type="hidden" name="ma_loai_hang" value="M004">
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-sm font-medium text-[#111418] dark:text-white">Tên Hàng <span class="text-red-500">*</span></label>
+                        <label class="text-sm font-medium text-[#111418] dark:text-white">Tên hàng <span class="text-red-500">*</span></label>
                         <input name="ten_hang" id="add_ten_hang" required
                             class="h-10 px-3 rounded-lg border border-[#dce0e5] dark:border-[#2a3b4d] bg-white dark:bg-[#0d141c] text-[#111418] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-[#637588] dark:placeholder:text-[#64748b]"
                             placeholder="Nhập tên" type="text" />
@@ -447,7 +447,7 @@ $end_record = min($offset + $items_per_page, $total_records);
         <div
             class="w-full max-w-lg bg-white dark:bg-[#1a2632] rounded-xl shadow-2xl border border-[#e5e7eb] dark:border-[#2a3b4d] flex flex-col max-h-[90vh]">
             <div class="flex items-center justify-between p-5 border-b border-[#e5e7eb] dark:border-[#2a3b4d]">
-                <h3 class="text-lg font-bold text-[#111418] dark:text-white">Chỉnh sửa Thành phẩm</h3>
+                <h3 class="text-lg font-bold text-[#111418] dark:text-white">Chỉnh sửa thành phẩm</h3>
                 <button type="button" onclick="closeEditModal()"
                     class="text-[#637588] hover:text-[#111418] dark:text-[#9ca3af] dark:hover:text-white transition-colors">
                     <span class="material-symbols-outlined">close</span>
@@ -459,7 +459,7 @@ $end_record = min($offset + $items_per_page, $total_records);
                     <input type="hidden" name="ma_hang" id="edit_ma_hang">
 
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-sm font-medium text-[#111418] dark:text-white">Mã Thành phẩm</label>
+                        <label class="text-sm font-medium text-[#111418] dark:text-white">Mã thành phẩm</label>
                         <input id="edit_ma_hang_display" readonly
                             class="h-10 px-3 rounded-lg border border-[#dce0e5] dark:border-[#2a3b4d] bg-gray-100 dark:bg-[#0d141c] text-[#111418] dark:text-white text-sm cursor-not-allowed" />
                         <p class="text-xs text-gray-500 dark:text-gray-400">Mã định danh duy nhất không thể thay đổi.
@@ -467,7 +467,7 @@ $end_record = min($offset + $items_per_page, $total_records);
                     </div>
 
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-sm font-medium text-[#111418] dark:text-white">Tên Thành phẩm <span class="text-red-500">*</span></label>
+                        <label class="text-sm font-medium text-[#111418] dark:text-white">Tên thành phẩm <span class="text-red-500">*</span></label>
                         <input name="ten_hang" id="edit_ten_hang" required
                             class="h-10 px-3 rounded-lg border border-[#dce0e5] dark:border-[#2a3b4d] bg-white dark:bg-[#0d141c] text-[#111418] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-[#637588] dark:placeholder:text-[#64748b]"
                             type="text" />
