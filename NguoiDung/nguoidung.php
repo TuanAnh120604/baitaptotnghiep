@@ -37,14 +37,14 @@ $offset = ($current_page - 1) * $records_per_page;
 try {
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $filter_role = isset($_GET['role']) ? trim($_GET['role']) : 'all';
-    
+
     // Query đếm tổng số record
     $count_query = "SELECT COUNT(*) as total FROM nguoi_dung nd LEFT JOIN vai_tro vt ON nd.ma_vai_tro = vt.ma_vai_tro WHERE 1=1";
-    
+
     if (!empty($search)) {
         $count_query .= " AND (nd.ma_nd LIKE :search OR nd.ten_nd LIKE :search)";
     }
-    
+
     if ($filter_role !== 'all') {
         if ($filter_role === 'quan-ly-kho') {
             $count_query .= " AND nd.ma_vai_tro = 'VT003'";
@@ -52,7 +52,7 @@ try {
             $count_query .= " AND nd.ma_vai_tro = 'VT004'";
         }
     }
-    
+
     $count_stmt = $pdo->prepare($count_query);
     if (!empty($search)) {
         $search_param = '%' . $search . '%';
@@ -61,17 +61,17 @@ try {
     $count_stmt->execute();
     $count_result = $count_stmt->fetch(PDO::FETCH_ASSOC);
     $total_records = $count_result['total'];
-    
+
     // Query lấy dữ liệu
     $data_query = "SELECT nd.ma_nd, nd.ten_nd, nd.mat_khau, nd.ma_vai_tro, vt.ten_vai_tro
                    FROM nguoi_dung nd
                    LEFT JOIN vai_tro vt ON nd.ma_vai_tro = vt.ma_vai_tro
                    WHERE 1=1";
-    
+
     if (!empty($search)) {
         $data_query .= " AND (nd.ma_nd LIKE :search OR nd.ten_nd LIKE :search)";
     }
-    
+
     if ($filter_role !== 'all') {
         if ($filter_role === 'quan-ly-kho') {
             $data_query .= " AND nd.ma_vai_tro = 'VT003'";
@@ -79,7 +79,7 @@ try {
             $data_query .= " AND nd.ma_vai_tro = 'VT004'";
         }
     }
-    
+
     $data_query .= " ORDER BY nd.ma_nd";
 
     $data_stmt = $pdo->prepare($data_query);
@@ -88,7 +88,7 @@ try {
     }
     $data_stmt->execute();
     $nguoi_dung_list = $data_stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     $total_pages = ceil($total_records / $records_per_page);
 } catch (Exception $e) {
     $nguoi_dung_list = [];
@@ -125,90 +125,90 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
     <script>
-    tailwind.config = {
-        darkMode: "class",
-        theme: {
-            extend: {
-                colors: {
-                    primary: "#2563EB", // Royal Blue
-                    secondary: "#64748B", // Slate
-                    success: "#10B981",
-                    warning: "#F59E0B",
-                    danger: "#EF4444",
-                    "background-light": "#F1F5F9",
-                    "background-dark": "#0F172A",
-                    "surface-light": "#FFFFFF",
-                    "surface-dark": "#1E293B",
-                    "border-light": "#E2E8F0",
-                    "border-dark": "#334155",
-                },
-                fontFamily: {
-                    sans: ["Inter", "sans-serif"],
-                },
-                borderRadius: {
-                    DEFAULT: "0.5rem",
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#2563EB", // Royal Blue
+                        secondary: "#64748B", // Slate
+                        success: "#10B981",
+                        warning: "#F59E0B",
+                        danger: "#EF4444",
+                        "background-light": "#F1F5F9",
+                        "background-dark": "#0F172A",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1E293B",
+                        "border-light": "#E2E8F0",
+                        "border-dark": "#334155",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
                 },
             },
-        },
-    };
+        };
     </script>
     <style>
-    body {
-        font-family: 'Inter', sans-serif;
-    }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
 
-    .sidebar-item-active {
-        background-color: rgba(37, 99, 235, 0.1);
-        color: #2563EB;
-        border-right: 3px solid #2563EB;
-    }
+        .sidebar-item-active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: #2563EB;
+            border-right: 3px solid #2563EB;
+        }
 
-    .dark .sidebar-item-active {
-        background-color: rgba(37, 99, 235, 0.2);
-        color: #60A5FA;
-    }
+        .dark .sidebar-item-active {
+            background-color: rgba(37, 99, 235, 0.2);
+            color: #60A5FA;
+        }
 
-    .material-symbols-outlined {
-        font-variation-settings: 'FILL'0, 'wght'400, 'GRAD'0, 'opsz'24;
-    }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
 
-    .material-symbols-outlined.filled {
-        font-variation-settings: 'FILL'1, 'wght'400, 'GRAD'0, 'opsz'24;
-    }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
 
-    #role-fields-manager,
-    #role-fields-storekeeper {
-        display: none;
-    }
+        #role-fields-manager,
+        #role-fields-storekeeper {
+            display: none;
+        }
 
-    /* Đảm bảo các nút luôn hiển thị */
-    #saveUserBtn,
-    #closeAddUserModal {
-        display: inline-flex !important;
-    }
+        /* Đảm bảo các nút luôn hiển thị */
+        #saveUserBtn,
+        #closeAddUserModal {
+            display: inline-flex !important;
+        }
 
-    .filter-btn {
-        background-color: white !important;
-        color: rgb(71 85 105) !important;
-        border: 1px solid transparent !important;
-        transition: all 0.3s ease;
-    }
+        .filter-btn {
+            background-color: white !important;
+            color: rgb(71 85 105) !important;
+            border: 1px solid transparent !important;
+            transition: all 0.3s ease;
+        }
 
-    .dark .filter-btn {
-        background-color: transparent !important;
-        color: rgb(148 163 184) !important;
-    }
+        .dark .filter-btn {
+            background-color: transparent !important;
+            color: rgb(148 163 184) !important;
+        }
 
-    .filter-btn-active {
-        background-color: rgb(37 99 235) !important;
-        color: white !important;
-        border-color: rgb(37 99 235) !important;
-    }
+        .filter-btn-active {
+            background-color: rgb(37 99 235) !important;
+            color: white !important;
+            border-color: rgb(37 99 235) !important;
+        }
 
-    .dark .filter-btn-active {
-        background-color: rgb(37 99 235) !important;
-        color: white !important;
-    }
+        .dark .filter-btn-active {
+            background-color: rgb(37 99 235) !important;
+            color: white !important;
+        }
     </style>
 </head>
 
@@ -229,11 +229,11 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <?php if (canCreate('nguoidung')): ?>
-                        <button id="openAddUserModal"
-                            class="flex items-center justify-center px-4 py-2 bg-primary hover:bg-blue-700 text-white rounded-lg shadow-sm text-sm font-medium transition-colors">
-                            <span class="material-symbols-outlined text-base mr-2">add</span>
-                            Thêm Người dùng
-                        </button>
+                            <button id="openAddUserModal"
+                                class="flex items-center justify-center px-4 py-2 bg-primary hover:bg-blue-700 text-white rounded-lg shadow-sm text-sm font-medium transition-colors">
+                                <span class="material-symbols-outlined text-base mr-2">add</span>
+                                Thêm Người dùng
+                            </button>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -415,9 +415,9 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                                 id="ma_vai_tro" name="ma_vai_tro">
                                                 <option value="">Chọn chức vụ</option>
                                                 <?php foreach ($vai_tro_list as $vai_tro): ?>
-                                                <option value="<?php echo htmlspecialchars($vai_tro['ma_vai_tro']); ?>">
-                                                    <?php echo htmlspecialchars($vai_tro['ten_vai_tro']); ?>
-                                                </option>
+                                                    <option value="<?php echo htmlspecialchars($vai_tro['ma_vai_tro']); ?>">
+                                                        <?php echo htmlspecialchars($vai_tro['ten_vai_tro']); ?>
+                                                    </option>
                                                 <?php endforeach; ?>
                                             </select>
                                             <div class="mt-4 space-y-4 pt-4 border-t border-border-light dark:border-border-dark"
@@ -432,10 +432,10 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                                             id="ma_loai_kho" name="ma_loai_kho">
                                                             <option value="">Chọn loại kho</option>
                                                             <?php foreach ($loai_kho_list as $loai_kho): ?>
-                                                            <option
-                                                                value="<?php echo htmlspecialchars($loai_kho['ma_loai_kho']); ?>">
-                                                                <?php echo htmlspecialchars($loai_kho['ten_loai_kho']); ?>
-                                                            </option>
+                                                                <option
+                                                                    value="<?php echo htmlspecialchars($loai_kho['ma_loai_kho']); ?>">
+                                                                    <?php echo htmlspecialchars($loai_kho['ten_loai_kho']); ?>
+                                                                </option>
                                                             <?php endforeach; ?>
                                                         </select>
                                                     </div>
@@ -448,10 +448,10 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                                             id="ma_vung" name="ma_vung">
                                                             <option value="">Chọn vùng miền</option>
                                                             <?php foreach ($vung_mien_list as $vung_mien): ?>
-                                                            <option
-                                                                value="<?php echo htmlspecialchars($vung_mien['ma_vung']); ?>">
-                                                                <?php echo htmlspecialchars($vung_mien['ten_vung']); ?>
-                                                            </option>
+                                                                <option
+                                                                    value="<?php echo htmlspecialchars($vung_mien['ma_vung']); ?>">
+                                                                    <?php echo htmlspecialchars($vung_mien['ten_vung']); ?>
+                                                                </option>
                                                             <?php endforeach; ?>
                                                         </select>
                                                     </div>
@@ -468,9 +468,9 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                                         id="ma_kho" name="ma_kho">
                                                         <option value="">Chọn kho</option>
                                                         <?php foreach ($kho_list as $kho): ?>
-                                                        <option value="<?php echo htmlspecialchars($kho['ma_kho']); ?>">
-                                                            <?php echo htmlspecialchars($kho['ten_kho'] . ' - ' . $kho['dia_chi']); ?>
-                                                        </option>
+                                                            <option value="<?php echo htmlspecialchars($kho['ma_kho']); ?>">
+                                                                <?php echo htmlspecialchars($kho['ten_kho'] . ' - ' . $kho['dia_chi']); ?>
+                                                            </option>
                                                         <?php endforeach; ?>
                                                     </select>
                                                 </div>
@@ -579,11 +579,57 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                     class="pl-9 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-surface-dark text-slate-800 dark:text-white focus:ring-primary focus:border-primary sm:text-sm appearance-none"
                                     required>
                                     <?php foreach ($vai_tro_list as $vai_tro): ?>
-                                    <option value="<?php echo htmlspecialchars($vai_tro['ma_vai_tro']); ?>">
-                                        <?php echo htmlspecialchars($vai_tro['ten_vai_tro']); ?>
-                                    </option>
+                                        <option value="<?php echo htmlspecialchars($vai_tro['ma_vai_tro']); ?>">
+                                            <?php echo htmlspecialchars($vai_tro['ten_vai_tro']); ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <!-- QUẢN LÝ KHO -->
+                                <div class="mt-4 space-y-4 pt-4 border-t border-border-light dark:border-border-dark"
+                                    id="edit-role-fields-manager" style="display:none">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium mb-1">Loại kho</label>
+                                            <select name="ma_loai_kho"
+                                                class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-surface-dark">
+                                                <option value="">Chọn loại kho</option>
+                                                <?php foreach ($loai_kho_list as $l): ?>
+                                                    <option value="<?= $l['ma_loai_kho'] ?>">
+                                                        <?= htmlspecialchars($l['ten_loai_kho']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium mb-1">Vùng miền</label>
+                                            <select name="ma_vung"
+                                                class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-surface-dark">
+                                                <option value="">Chọn vùng</option>
+                                                <?php foreach ($vung_mien_list as $v): ?>
+                                                    <option value="<?= $v['ma_vung'] ?>">
+                                                        <?= htmlspecialchars($v['ten_vung']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- THỦ KHO -->
+                                <div class="mt-4 pt-4 border-t border-border-light dark:border-border-dark"
+                                    id="edit-role-fields-storekeeper" style="display:none">
+                                    <label class="block text-sm font-medium mb-1">Kho quản lý</label>
+                                    <select name="ma_kho"
+                                        class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-surface-dark">
+                                        <option value="">Chọn kho</option>
+                                        <?php foreach ($kho_list as $k): ?>
+                                            <option value="<?= $k['ma_kho'] ?>">
+                                                <?= htmlspecialchars($k['ten_kho']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
                                 <span
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
                                     <span class="material-symbols-outlined text-sm">expand_more</span>
@@ -656,144 +702,147 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
     </div>
     </div>
     <script>
-    var allUsersData = <?php echo json_encode($nguoi_dung_list); ?>;
+        var allUsersData = <?php echo json_encode($nguoi_dung_list); ?>;
 
-    // Check for dark mode preference
-    const html = document.documentElement;
-    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia(
-            '(prefers-color-scheme: dark)').matches)) {
-        html.classList.add('dark');
-    } else {
-        html.classList.remove('dark');
-    }
-
-    // Xử lý lọc theo vai trò và tìm kiếm - không reload trang
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const searchInput = document.getElementById('userSearch');
-    const clearSearchBtn = document.getElementById('clearSearchBtn');
-    const tableBody = document.querySelector('tbody');
-    const paginationControls = document.getElementById('paginationContainer');
-    const pageInfo = document.getElementById('resultCount');
-    const recordsPerPage = 10;
-    let filteredData = [];
-    let currentPageNum = 1;
-    let searchTimeout;
-
-    function changePage(page) {
-        const totalPages = Math.ceil(filteredData.length / recordsPerPage);
-        if (page === 'prev') page = currentPageNum - 1;
-        else if (page === 'next') page = currentPageNum + 1;
-        else page = parseInt(page);
-        if (page < 1 || page > totalPages) return;
-        currentPageNum = page;
-        renderTable();
-        document.querySelector('table')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-    
-    // Kiểm tra quyền từ PHP
-    const canEditUser = <?php echo canEdit('nguoidung') ? 'true' : 'false'; ?>;
-    const canDeleteUser = <?php echo canDelete('nguoidung') ? 'true' : 'false'; ?>;
-
-    // Initialize data and UI
-    const urlParams = new URLSearchParams(window.location.search);
-    const initialPage = parseInt(urlParams.get('page')) || 1;
-    const initialSearch = urlParams.get('search') || '';
-    const initialRole = urlParams.get('role') || 'all';
-
-    searchInput.value = initialSearch;
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (btn.dataset.role === initialRole) {
-            btn.classList.add('filter-btn-active');
+        // Check for dark mode preference
+        const html = document.documentElement;
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia(
+                '(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
         } else {
-            btn.classList.remove('filter-btn-active');
+            html.classList.remove('dark');
         }
-    });
 
-    filteredData = [...allUsersData];
-    currentPageNum = initialPage;
-    renderTable();
+        // Xử lý lọc theo vai trò và tìm kiếm - không reload trang
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const searchInput = document.getElementById('userSearch');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const tableBody = document.querySelector('tbody');
+        const paginationControls = document.getElementById('paginationContainer');
+        const pageInfo = document.getElementById('resultCount');
+        const recordsPerPage = 10;
+        let filteredData = [];
+        let currentPageNum = 1;
+        let searchTimeout;
 
-    // Hàm lọc và phân trang bảng
-    function filterAndRenderTable() {
-        const selectedRole = document.querySelector('.filter-btn.filter-btn-active')?.dataset.role || 'all';
-        const searchText = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+            if (page === 'prev') page = currentPageNum - 1;
+            else if (page === 'next') page = currentPageNum + 1;
+            else page = parseInt(page);
+            if (page < 1 || page > totalPages) return;
+            currentPageNum = page;
+            renderTable();
+            document.querySelector('table')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+        }
 
-        // Lọc dữ liệu
-        filteredData = allUsersData.filter(user => {
-            // Lọc theo vai trò
-            if (selectedRole !== 'all') {
-                if (selectedRole === 'quan-ly-kho' && user.ma_vai_tro !== 'VT003') {
-                    return false;
-                } else if (selectedRole === 'thu-kho' && user.ma_vai_tro !== 'VT004') {
-                    return false;
-                }
+        // Kiểm tra quyền từ PHP
+        const canEditUser = <?php echo canEdit('nguoidung') ? 'true' : 'false'; ?>;
+        const canDeleteUser = <?php echo canDelete('nguoidung') ? 'true' : 'false'; ?>;
+
+        // Initialize data and UI
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialPage = parseInt(urlParams.get('page')) || 1;
+        const initialSearch = urlParams.get('search') || '';
+        const initialRole = urlParams.get('role') || 'all';
+
+        searchInput.value = initialSearch;
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            if (btn.dataset.role === initialRole) {
+                btn.classList.add('filter-btn-active');
+            } else {
+                btn.classList.remove('filter-btn-active');
             }
-
-            // Lọc theo tìm kiếm
-            if (searchText) {
-                const maMatch = (user.ma_nd || '').toLowerCase().includes(searchText);
-                const tenMatch = (user.ten_nd || '').toLowerCase().includes(searchText);
-                if (!maMatch && !tenMatch) {
-                    return false;
-                }
-            }
-
-            return true;
         });
 
+        filteredData = [...allUsersData];
+        currentPageNum = initialPage;
         renderTable();
-    }
 
-    // Hàm xác định màu sắc badge vai trò
-    function getBadgeClass(ma_vai_tro) {
-        switch (ma_vai_tro) {
-            case 'VT001': // Admin
-                return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-800';
-            case 'VT002': // Ban giám đốc
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800';
-            case 'VT003': // Quản lý kho
-                return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800';
-            case 'VT004': // Thủ kho
-                return 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600';
-            default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600';
+        // Hàm lọc và phân trang bảng
+        function filterAndRenderTable() {
+            const selectedRole = document.querySelector('.filter-btn.filter-btn-active')?.dataset.role || 'all';
+            const searchText = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            // Lọc dữ liệu
+            filteredData = allUsersData.filter(user => {
+                // Lọc theo vai trò
+                if (selectedRole !== 'all') {
+                    if (selectedRole === 'quan-ly-kho' && user.ma_vai_tro !== 'VT003') {
+                        return false;
+                    } else if (selectedRole === 'thu-kho' && user.ma_vai_tro !== 'VT004') {
+                        return false;
+                    }
+                }
+
+                // Lọc theo tìm kiếm
+                if (searchText) {
+                    const maMatch = (user.ma_nd || '').toLowerCase().includes(searchText);
+                    const tenMatch = (user.ten_nd || '').toLowerCase().includes(searchText);
+                    if (!maMatch && !tenMatch) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            renderTable();
         }
-    }
 
-    // Hàm escape HTML để tránh XSS
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+        // Hàm xác định màu sắc badge vai trò
+        function getBadgeClass(ma_vai_tro) {
+            switch (ma_vai_tro) {
+                case 'VT001': // Admin
+                    return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-800';
+                case 'VT002': // Ban giám đốc
+                    return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800';
+                case 'VT003': // Quản lý kho
+                    return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800';
+                case 'VT004': // Thủ kho
+                    return 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600';
+                default:
+                    return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600';
+            }
+        }
 
-    // Hàm render bảng dựa trên trang hiện tại
-    function renderTable() {
-        const totalPages = Math.ceil(filteredData.length / recordsPerPage);
-        const offset = (currentPageNum - 1) * recordsPerPage;
-        const pageData = filteredData.slice(offset, offset + recordsPerPage);
+        // Hàm escape HTML để tránh XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-        // Render các hàng dữ liệu
-        if (pageData.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">Không có dữ liệu người dùng</td></tr>';
-        } else {
-            tableBody.innerHTML = pageData.map(user => {
-                const badgeClass = getBadgeClass(user.ma_vai_tro || '');
-                const tenVaiTro = escapeHtml(user.ten_vai_tro || 'Chưa xác định');
-                const maNd = escapeHtml(user.ma_nd || '');
-                const tenNd = escapeHtml(user.ten_nd || '');
-                const tenNdEscaped = tenNd.replace(/'/g, "\\'");
-                const maVaiTro = escapeHtml(user.ma_vai_tro || '');
-                
-                let actionButtons = '';
-                if (canEditUser) {
-                    actionButtons += `<button onclick="openEditModal('${maNd}', '${tenNdEscaped}', '${maVaiTro}')" class="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors" title="Sửa"><span class="material-symbols-outlined text-lg">edit</span></button>`;
-                }
-                if (canDeleteUser) {
-                    actionButtons += `<button onclick="openDeleteModal('${maNd}', '${tenNdEscaped}')" class="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors" title="Xóa"><span class="material-symbols-outlined text-lg">delete</span></button>`;
-                }
-                
-                return `
+        // Hàm render bảng dựa trên trang hiện tại
+        function renderTable() {
+            const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+            const offset = (currentPageNum - 1) * recordsPerPage;
+            const pageData = filteredData.slice(offset, offset + recordsPerPage);
+
+            // Render các hàng dữ liệu
+            if (pageData.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">Không có dữ liệu người dùng</td></tr>';
+            } else {
+                tableBody.innerHTML = pageData.map(user => {
+                    const badgeClass = getBadgeClass(user.ma_vai_tro || '');
+                    const tenVaiTro = escapeHtml(user.ten_vai_tro || 'Chưa xác định');
+                    const maNd = escapeHtml(user.ma_nd || '');
+                    const tenNd = escapeHtml(user.ten_nd || '');
+                    const tenNdEscaped = tenNd.replace(/'/g, "\\'");
+                    const maVaiTro = escapeHtml(user.ma_vai_tro || '');
+
+                    let actionButtons = '';
+                    if (canEditUser) {
+                        actionButtons += `<button onclick="openEditModal('${maNd}', '${tenNdEscaped}', '${maVaiTro}')" class="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors" title="Sửa"><span class="material-symbols-outlined text-lg">edit</span></button>`;
+                    }
+                    if (canDeleteUser) {
+                        actionButtons += `<button onclick="openDeleteModal('${maNd}', '${tenNdEscaped}')" class="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors" title="Xóa"><span class="material-symbols-outlined text-lg">delete</span></button>`;
+                    }
+
+                    return `
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
                         <td class="px-6 py-4 font-medium text-slate-700 dark:text-slate-300">${maNd}</td>
                         <td class="px-6 py-4 font-medium text-slate-800 dark:text-white">${tenNd}</td>
@@ -805,284 +854,321 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                         </td>
                     </tr>
                 `;
-            }).join('');
+                }).join('');
+            }
+
+            // Cập nhật pagination info
+            const startRecord = filteredData.length > 0 ? (currentPageNum - 1) * recordsPerPage + 1 : 0;
+            const endRecord = Math.min(currentPageNum * recordsPerPage, filteredData.length);
+            document.getElementById('resultCount').textContent = `Hiển thị ${startRecord}-${endRecord} trên ${filteredData.length} người dùng`;
+
+            // Disable/enable prev/next buttons
+            document.getElementById('prevBtn').disabled = currentPageNum <= 1;
+            document.getElementById('nextBtn').disabled = currentPageNum >= totalPages;
+
+            // Cập nhật nút phân trang
+            updatePaginationButtons(totalPages);
         }
 
-        // Cập nhật pagination info
-        const startRecord = filteredData.length > 0 ? (currentPageNum - 1) * recordsPerPage + 1 : 0;
-        const endRecord = Math.min(currentPageNum * recordsPerPage, filteredData.length);
-        document.getElementById('resultCount').textContent = `Hiển thị ${startRecord}-${endRecord} trên ${filteredData.length} người dùng`;
+        // Hàm cập nhật nút phân trang
+        function updatePaginationButtons(totalPages) {
+            const paginationBtns = paginationControls?.querySelectorAll('.pagination-btn');
+            if (!paginationBtns) return;
 
-        // Disable/enable prev/next buttons
-        document.getElementById('prevBtn').disabled = currentPageNum <= 1;
-        document.getElementById('nextBtn').disabled = currentPageNum >= totalPages;
+            paginationBtns.forEach(btn => {
+                const page = parseInt(btn.dataset.page);
+                btn.classList.remove('bg-primary', 'text-white', 'cursor-not-allowed', 'text-slate-500', 'dark:text-slate-400');
+                btn.classList.add('border', 'border-border-light', 'dark:border-border-dark', 'text-slate-600', 'dark:text-slate-300');
+                btn.disabled = false;
 
-        // Cập nhật nút phân trang
-        updatePaginationButtons(totalPages);
-    }
-
-    // Hàm cập nhật nút phân trang
-    function updatePaginationButtons(totalPages) {
-        const paginationBtns = paginationControls?.querySelectorAll('.pagination-btn');
-        if (!paginationBtns) return;
-
-        paginationBtns.forEach(btn => {
-            const page = parseInt(btn.dataset.page);
-            btn.classList.remove('bg-primary', 'text-white', 'cursor-not-allowed', 'text-slate-500', 'dark:text-slate-400');
-            btn.classList.add('border', 'border-border-light', 'dark:border-border-dark', 'text-slate-600', 'dark:text-slate-300');
-            btn.disabled = false;
-
-            if (page === currentPageNum) {
-                btn.classList.remove('border', 'border-border-light', 'dark:border-border-dark', 'text-slate-600', 'dark:text-slate-300');
-                btn.classList.add('bg-primary', 'text-white');
-            }
-        });
-    }
-
-
-
-    // Sự kiện click nút lọc
-    filterButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            filterButtons.forEach(btn => btn.classList.remove('filter-btn-active'));
-            this.classList.add('filter-btn-active');
-            filterAndRenderTable();
-        });
-    });
-
-    // Cập nhật trạng thái nút xóa
-    function updateClearButton() {
-        if (clearSearchBtn && searchInput) {
-            if (searchInput.value.trim() !== '') {
-                clearSearchBtn.classList.remove('opacity-0', 'pointer-events-none');
-                clearSearchBtn.classList.add('opacity-100', 'pointer-events-auto');
-            } else {
-                clearSearchBtn.classList.add('opacity-0', 'pointer-events-none');
-                clearSearchBtn.classList.remove('opacity-100', 'pointer-events-auto');
-            }
+                if (page === currentPageNum) {
+                    btn.classList.remove('border', 'border-border-light', 'dark:border-border-dark', 'text-slate-600', 'dark:text-slate-300');
+                    btn.classList.add('bg-primary', 'text-white');
+                }
+            });
         }
-    }
 
-    // Sự kiện tìm kiếm với debounce
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            updateClearButton();
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
+
+
+        // Sự kiện click nút lọc
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                filterButtons.forEach(btn => btn.classList.remove('filter-btn-active'));
+                this.classList.add('filter-btn-active');
                 filterAndRenderTable();
-            }, 300); // Debounce 300ms
-        });
-    }
-
-    // Cập nhật trạng thái nút xóa khi trang load
-    updateClearButton();
-
-    // Xử lý nút xóa tìm kiếm
-    if (clearSearchBtn) {
-        clearSearchBtn.addEventListener('click', function() {
-            searchInput.value = '';
-            updateClearButton();
-            filterAndRenderTable();
-        });
-    }
-
-    // Xử lý submit form thêm người dùng
-    const addUserForm = document.getElementById('addUserForm');
-    if (addUserForm) {
-        addUserForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            const submitBtn = document.getElementById('saveUserBtn');
-            const originalText = submitBtn.innerHTML;
-
-            // Disable button và hiển thị loading
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>';
-
-            fetch('update_nguoidung.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .catch(error => {
-                // Nếu response không phải JSON, redirect sẽ xảy ra tự động
-                // Vì vậy ta gửi form bình thường
-                return this.submit();
-            })
-            .finally(() => {
-                // Restore button
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
             });
         });
-    }
 
-    // Mở modal Thêm
-    const openAddUserModalBtn = document.getElementById('openAddUserModal');
-    if (openAddUserModalBtn) {
-        openAddUserModalBtn.addEventListener('click', function() {
-            document.getElementById('addUserModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Ngăn scroll nền
-            ensureButtonsVisible(); // Đảm bảo các nút hiển thị
-        });
-    }
+        // Cập nhật trạng thái nút xóa
+        function updateClearButton() {
+            if (clearSearchBtn && searchInput) {
+                if (searchInput.value.trim() !== '') {
+                    clearSearchBtn.classList.remove('opacity-0', 'pointer-events-none');
+                    clearSearchBtn.classList.add('opacity-100', 'pointer-events-auto');
+                } else {
+                    clearSearchBtn.classList.add('opacity-0', 'pointer-events-none');
+                    clearSearchBtn.classList.remove('opacity-100', 'pointer-events-auto');
+                }
+            }
+        }
 
-    // Đóng modal Thêm (nút Hủy)
-    const closeAddUserModalBtn = document.getElementById('closeAddUserModal');
-    if (closeAddUserModalBtn) {
-        closeAddUserModalBtn.addEventListener('click', function() {
-            document.getElementById('addUserModal').classList.add('hidden');
-            document.body.style.overflow = ''; // Khôi phục scroll
-        });
-    }
+        // Sự kiện tìm kiếm với debounce
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                updateClearButton();
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    filterAndRenderTable();
+                }, 300); // Debounce 300ms
+            });
+        }
 
-    // Đóng khi click nền (tùy chọn - rất tiện)
-    const addUserModal = document.getElementById('addUserModal');
-    if (addUserModal) {
-        addUserModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.add('hidden');
+        // Cập nhật trạng thái nút xóa khi trang load
+        updateClearButton();
+
+        // Xử lý nút xóa tìm kiếm
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                updateClearButton();
+                filterAndRenderTable();
+            });
+        }
+
+        // Xử lý submit form thêm người dùng
+        const addUserForm = document.getElementById('addUserForm');
+        if (addUserForm) {
+            addUserForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                const submitBtn = document.getElementById('saveUserBtn');
+                const originalText = submitBtn.innerHTML;
+
+                // Disable button và hiển thị loading
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>';
+
+                fetch('update_nguoidung.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .catch(error => {
+                        // Nếu response không phải JSON, redirect sẽ xảy ra tự động
+                        // Vì vậy ta gửi form bình thường
+                        return this.submit();
+                    })
+                    .finally(() => {
+                        // Restore button
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    });
+            });
+        }
+
+        // Mở modal Thêm
+        const openAddUserModalBtn = document.getElementById('openAddUserModal');
+        if (openAddUserModalBtn) {
+            openAddUserModalBtn.addEventListener('click', function() {
+                document.getElementById('addUserModal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Ngăn scroll nền
+                ensureButtonsVisible(); // Đảm bảo các nút hiển thị
+            });
+        }
+
+        // Đóng modal Thêm (nút Hủy)
+        const closeAddUserModalBtn = document.getElementById('closeAddUserModal');
+        if (closeAddUserModalBtn) {
+            closeAddUserModalBtn.addEventListener('click', function() {
+                document.getElementById('addUserModal').classList.add('hidden');
+                document.body.style.overflow = ''; // Khôi phục scroll
+            });
+        }
+
+        // Đóng khi click nền (tùy chọn - rất tiện)
+        const addUserModal = document.getElementById('addUserModal');
+        if (addUserModal) {
+            addUserModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+
+        //mo sua
+        function openEditModal(ma_nd, ten_nd, ma_vai_tro) {
+
+            // Gán dữ liệu cơ bản
+            document.getElementById('edit_ma_nd').value = ma_nd;
+            document.getElementById('edit_ma_nd_display').value = ma_nd;
+            document.getElementById('edit_ten_nd').value = ten_nd;
+
+            // Set vai trò
+            const roleSelect = document.getElementById('edit_ma_vai_tro');
+            roleSelect.value = ma_vai_tro;
+
+            // Ẩn toàn bộ field phụ
+            document.getElementById('edit-role-fields-manager').style.display = 'none';
+            document.getElementById('edit-role-fields-storekeeper').style.display = 'none';
+
+            // Reset select
+            document.querySelector('#edit-role-fields-manager select[name="ma_vung"]').value = '';
+            document.querySelector('#edit-role-fields-manager select[name="ma_loai_kho"]').value = '';
+            document.querySelector('#edit-role-fields-storekeeper select[name="ma_kho"]').value = '';
+
+            // Gọi AJAX lấy dữ liệu chi tiết
+            fetch(`ajax_edit_nguoidung.php?action=get_user&ma_nd=${ma_nd}`)
+                .then(res => res.json())
+                .then(data => {
+
+                    /* ===== QUẢN LÝ KHO ===== */
+                    if (ma_vai_tro === 'VT003' && data.phan_quyen?.length > 0) {
+
+                        document.getElementById('edit-role-fields-manager').style.display = 'block';
+
+                        const pq = data.phan_quyen[0];
+
+                        document.querySelector('#edit-role-fields-manager select[name="ma_vung"]').value = pq.ma_vung;
+                        document.querySelector('#edit-role-fields-manager select[name="ma_loai_kho"]').value = pq.ma_loai_kho;
+                    }
+
+                    /* ===== THỦ KHO ===== */
+                    if (ma_vai_tro === 'VT004' && data.kho?.length > 0) {
+
+                        document.getElementById('edit-role-fields-storekeeper').style.display = 'block';
+
+                        document.querySelector('#edit-role-fields-storekeeper select[name="ma_kho"]').value = data.kho[0].ma_kho;
+                    }
+                });
+
+            // Mở modal
+            document.getElementById('editUserModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+
+        // Đóng modal Sửa
+        const closeEditUserModalBtn = document.getElementById('closeEditUserModal');
+        if (closeEditUserModalBtn) {
+            closeEditUserModalBtn.addEventListener('click', function() {
+                document.getElementById('editUserModal').classList.add('hidden');
                 document.body.style.overflow = '';
-            }
-        });
-    }
-
-    //mo sua
-    function openEditModal(ma_nd, ten_nd, ma_vai_tro) {
-        // Điền dữ liệu vào form
-        document.getElementById('edit_ma_nd').value = ma_nd;
-        document.getElementById('edit_ma_nd_display').value = ma_nd;
-        document.getElementById('edit_ten_nd').value = ten_nd;
-
-        // Chọn đúng chức vụ trong select
-        const select = document.getElementById('edit_ma_vai_tro');
-        for (let option of select.options) {
-            if (option.value === ma_vai_tro) {
-                option.selected = true;
-                break;
-            }
+            });
         }
 
-        // Trigger hiển thị các trường bổ sung theo vai trò
-        toggleRoleFields(select);
-
-        // Mở modal
-        document.getElementById('editUserModal').classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-
-    // Đóng modal Sửa
-    const closeEditUserModalBtn = document.getElementById('closeEditUserModal');
-    if (closeEditUserModalBtn) {
-        closeEditUserModalBtn.addEventListener('click', function() {
-            document.getElementById('editUserModal').classList.add('hidden');
-            document.body.style.overflow = '';
-        });
-    }
-
-    const cancelEditUserModalBtn = document.getElementById('cancelEditUserModal');
-    if (cancelEditUserModalBtn) {
-        cancelEditUserModalBtn.addEventListener('click', function() {
-            document.getElementById('editUserModal').classList.add('hidden');
-            document.body.style.overflow = '';
-        });
-    }
-
-    // Đóng khi click nền
-    const editUserModal = document.getElementById('editUserModal');
-    if (editUserModal) {
-        editUserModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.add('hidden');
+        const cancelEditUserModalBtn = document.getElementById('cancelEditUserModal');
+        if (cancelEditUserModalBtn) {
+            cancelEditUserModalBtn.addEventListener('click', function() {
+                document.getElementById('editUserModal').classList.add('hidden');
                 document.body.style.overflow = '';
+            });
+        }
+
+        // Đóng khi click nền
+        const editUserModal = document.getElementById('editUserModal');
+        if (editUserModal) {
+            editUserModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+
+        // Hàm xử lý hiển thị trường theo vai trò
+        function toggleRoleFields(selectElement) {
+
+            const addManager = document.getElementById('role-fields-manager');
+            const addStore = document.getElementById('role-fields-storekeeper');
+            const editManager = document.getElementById('edit-role-fields-manager');
+            const editStore = document.getElementById('edit-role-fields-storekeeper');
+
+            // Ẩn tất cả
+            [addManager, addStore, editManager, editStore].forEach(el => {
+                if (el) el.style.display = 'none';
+            });
+
+            if (selectElement.value === 'VT003') {
+                if (addManager) addManager.style.display = 'block';
+                if (editManager) editManager.style.display = 'block';
             }
-        });
-    }
 
-    // Hàm xử lý hiển thị trường theo vai trò
-    function toggleRoleFields(selectElement) {
-        const roleFieldsManager = document.getElementById('role-fields-manager');
-        const roleFieldsStorekeeper = document.getElementById('role-fields-storekeeper');
-
-        // Ẩn tất cả các trường bổ sung
-        if (roleFieldsManager) roleFieldsManager.style.display = 'none';
-        if (roleFieldsStorekeeper) roleFieldsStorekeeper.style.display = 'none';
-
-        // Hiển thị trường tương ứng
-        if (selectElement.value === 'VT003') { // Quản lý kho
-            if (roleFieldsManager) roleFieldsManager.style.display = 'block';
-        } else if (selectElement.value === 'VT004') { // Thủ kho
-            if (roleFieldsStorekeeper) roleFieldsStorekeeper.style.display = 'block';
-        }
-    }
-
-    // Đảm bảo các nút luôn hiển thị khi modal mở
-    function ensureButtonsVisible() {
-        const saveBtn = document.getElementById('saveUserBtn');
-        const cancelBtn = document.getElementById('closeAddUserModal');
-
-        console.log('Save button:', saveBtn);
-        console.log('Cancel button:', cancelBtn);
-
-        if (saveBtn) {
-            saveBtn.style.display = 'inline-flex';
-            saveBtn.style.visibility = 'visible';
-            console.log('Save button display:', saveBtn.style.display);
-        }
-        if (cancelBtn) {
-            cancelBtn.style.display = 'inline-flex';
-            cancelBtn.style.visibility = 'visible';
-            console.log('Cancel button display:', cancelBtn.style.display);
-        }
-    }
-
-    // Xử lý hiển thị trường theo vai trò cho form thêm
-    const vaiTroSelect = document.getElementById('ma_vai_tro');
-    if (vaiTroSelect) {
-        vaiTroSelect.addEventListener('change', function() {
-            toggleRoleFields(this);
-        });
-    } else {
-        console.error('Không tìm thấy element ma_vai_tro');
-    }
-
-    // Xử lý hiển thị trường theo vai trò cho form sửa
-    const editVaiTroSelect = document.getElementById('edit_ma_vai_tro');
-    if (editVaiTroSelect) {
-        editVaiTroSelect.addEventListener('change', function() {
-            toggleRoleFields(this);
-        });
-    }
-
-    // Hàm hiển thị thông báo
-    function showNotification(message, type = 'info') {
-        // Tạo notification element
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
-
-        let bgColor, textColor;
-        switch (type) {
-            case 'success':
-                bgColor = 'bg-green-500';
-                textColor = 'text-white';
-                break;
-            case 'error':
-                bgColor = 'bg-red-500';
-                textColor = 'text-white';
-                break;
-            case 'warning':
-                bgColor = 'bg-yellow-500';
-                textColor = 'text-black';
-                break;
-            default:
-                bgColor = 'bg-blue-500';
-                textColor = 'text-white';
+            if (selectElement.value === 'VT004') {
+                if (addStore) addStore.style.display = 'block';
+                if (editStore) editStore.style.display = 'block';
+            }
         }
 
-        notification.className += ` ${bgColor} ${textColor}`;
 
-        notification.innerHTML = `
+
+        // Đảm bảo các nút luôn hiển thị khi modal mở
+        function ensureButtonsVisible() {
+            const saveBtn = document.getElementById('saveUserBtn');
+            const cancelBtn = document.getElementById('closeAddUserModal');
+
+            console.log('Save button:', saveBtn);
+            console.log('Cancel button:', cancelBtn);
+
+            if (saveBtn) {
+                saveBtn.style.display = 'inline-flex';
+                saveBtn.style.visibility = 'visible';
+                console.log('Save button display:', saveBtn.style.display);
+            }
+            if (cancelBtn) {
+                cancelBtn.style.display = 'inline-flex';
+                cancelBtn.style.visibility = 'visible';
+                console.log('Cancel button display:', cancelBtn.style.display);
+            }
+        }
+
+        // Xử lý hiển thị trường theo vai trò cho form thêm
+        const vaiTroSelect = document.getElementById('ma_vai_tro');
+        if (vaiTroSelect) {
+            vaiTroSelect.addEventListener('change', function() {
+                toggleRoleFields(this);
+            });
+        } else {
+            console.error('Không tìm thấy element ma_vai_tro');
+        }
+
+        // Xử lý hiển thị trường theo vai trò cho form sửa
+        const editVaiTroSelect = document.getElementById('edit_ma_vai_tro');
+        if (editVaiTroSelect) {
+            editVaiTroSelect.addEventListener('change', function() {
+                toggleRoleFields(this);
+            });
+        }
+
+        // Hàm hiển thị thông báo
+        function showNotification(message, type = 'info') {
+            // Tạo notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
+
+            let bgColor, textColor;
+            switch (type) {
+                case 'success':
+                    bgColor = 'bg-green-500';
+                    textColor = 'text-white';
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-500';
+                    textColor = 'text-white';
+                    break;
+                case 'warning':
+                    bgColor = 'bg-yellow-500';
+                    textColor = 'text-black';
+                    break;
+                default:
+                    bgColor = 'bg-blue-500';
+                    textColor = 'text-white';
+            }
+
+            notification.className += ` ${bgColor} ${textColor}`;
+
+            notification.innerHTML = `
             <div class="flex items-center">
                 <span>${message}</span>
                 <button onclick="this.parentElement.parentElement.remove()" class="ml-4 hover:opacity-75">
@@ -1091,54 +1177,53 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
             </div>
         `;
 
-        document.body.appendChild(notification);
+            document.body.appendChild(notification);
 
-        // Animate in
-        setTimeout(() => {
-            notification.classList.remove('translate-x-full');
-        }, 100);
-
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            notification.classList.add('translate-x-full');
+            // Animate in
             setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 300);
-        }, 5000);
-    }
+                notification.classList.remove('translate-x-full');
+            }, 100);
 
-    //mo xoa
-    function openDeleteModal(ma_nd, ten_nd) {
-        document.getElementById('delete_user_name').textContent = ten_nd;
-        document.getElementById('delete_user_code').textContent = ma_nd;
-        document.getElementById('delete_ma_nd').value = ma_nd;
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 5000);
+        }
 
-        document.getElementById('deleteUserModal').classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
+        //mo xoa
+        function openDeleteModal(ma_nd, ten_nd) {
+            document.getElementById('delete_user_name').textContent = ten_nd;
+            document.getElementById('delete_user_code').textContent = ma_nd;
+            document.getElementById('delete_ma_nd').value = ma_nd;
 
-    // Đóng modal Xóa
-    const cancelDeleteUserModalBtn = document.getElementById('cancelDeleteUserModal');
-    if (cancelDeleteUserModalBtn) {
-        cancelDeleteUserModalBtn.addEventListener('click', function() {
-            document.getElementById('deleteUserModal').classList.add('hidden');
-            document.body.style.overflow = '';
-        });
-    }
+            document.getElementById('deleteUserModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
 
-    // Đóng khi click nền (tùy chọn)
-    const deleteUserModal = document.getElementById('deleteUserModal');
-    if (deleteUserModal) {
-        deleteUserModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.add('hidden');
+        // Đóng modal Xóa
+        const cancelDeleteUserModalBtn = document.getElementById('cancelDeleteUserModal');
+        if (cancelDeleteUserModalBtn) {
+            cancelDeleteUserModalBtn.addEventListener('click', function() {
+                document.getElementById('deleteUserModal').classList.add('hidden');
                 document.body.style.overflow = '';
-            }
-        });
-    }
+            });
+        }
 
+        // Đóng khi click nền (tùy chọn)
+        const deleteUserModal = document.getElementById('deleteUserModal');
+        if (deleteUserModal) {
+            deleteUserModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
     </script>
 
 </body>
