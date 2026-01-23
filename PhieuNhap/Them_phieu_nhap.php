@@ -148,82 +148,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        (ma_ctpn, ma_phieu_nhap, ma_hang, so_luong_nhap, don_gia, thanh_tien)
                        VALUES (?, ?, ?, ?, ?, ?)";
             $stmt_ct = $pdo->prepare($sql_ct);
-            // ===== LẤY MIN / MAX CỦA HÀNG =====
-            $stmt_hang = $pdo->prepare("
-    SELECT muc_du_tru_min, muc_du_tru_max
-    FROM hang_hoa
-    WHERE ma_hang = ?
-");
-
-            // ===== LẤY TỒN KHO HIỆN TẠI (BẢN GHI MỚI NHẤT) =====
-            $stmt_ton = $pdo->prepare("
-    SELECT so_luong_ton
-    FROM the_kho
-    WHERE ma_kho = ?
-      AND ma_hang = ?
-    ORDER BY ngay DESC, ma_the_kho DESC
-    LIMIT 1
-");
 
             $ds_ma_hang = [];
 
             foreach ($hang_hoa as $item) {
-                if (empty($item['ma_hang']) || empty($item['so_luong']) || $item['so_luong'] <= 0) {
-                    continue;
-                }
+                if (empty($item['ma_hang']) || empty($item['so_luong']) || $item['so_luong'] <= 0) continue;
 
-                $ma_hang  = $item['ma_hang'];
-                $so_luong = (int)$item['so_luong'];
-                $don_gia  = (float)($item['don_gia'] ?? 0);
-
-                // ===== LẤY MIN / MAX =====
-                $stmt_hang->execute([$ma_hang]);
-                $hang = $stmt_hang->fetch(PDO::FETCH_ASSOC);
-
-                if (!$hang) {
-                    throw new Exception("Không tìm thấy hàng hóa: $ma_hang");
-                }
-
-                $min = (int)$hang['muc_du_tru_min'];
-                $max = (int)$hang['muc_du_tru_max'];
-
-                // ===== LẤY TỒN HIỆN TẠI =====
-                $stmt_ton->execute([$ma_kho, $ma_hang]);
-                $ton_hien_tai = (int)($stmt_ton->fetchColumn() ?? 0);
-
-                // ===== ĐIỀU KIỆN 1 =====
-                if ($so_luong <= $min || $so_luong >= $max) {
-                    throw new Exception(
-                        "Số lượng nhập ($so_luong) phải > $min và < $max"
-                    );
-                }
-
-                // ===== ĐIỀU KIỆN 2 =====
-                $ton_sau_nhap = $ton_hien_tai + $so_luong;
-
-                if ($ton_sau_nhap <= $min || $ton_sau_nhap > $max) {
-                    throw new Exception(
-                        "Tồn sau nhập ($ton_sau_nhap) phải > $min và ≤ $max.
-             (Tồn hiện tại: $ton_hien_tai, Nhập: $so_luong)"
-                    );
-                }
-
-                // ===== INSERT CHI TIẾT PHIẾU NHẬP =====
+                $ma_hang    = $item['ma_hang'];
+                $so_luong   = (int)$item['so_luong'];
+                $don_gia    = (float)($item['don_gia'] ?? 0);
                 $thanh_tien = $so_luong * $don_gia;
+
                 $ma_ctpn = $ma_phieu_nhap . '-' . $ma_hang;
 
-                $stmt_ct->execute([
-                    $ma_ctpn,
-                    $ma_phieu_nhap,
-                    $ma_hang,
-                    $so_luong,
-                    $don_gia,
-                    $thanh_tien
-                ]);
+                $stmt_ct->execute([$ma_ctpn, $ma_phieu_nhap, $ma_hang, $so_luong, $don_gia, $thanh_tien]);
 
                 $ds_ma_hang[] = $ma_hang;
             }
-
 
             $pdo->commit();
 
@@ -289,33 +230,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="max-w-5xl mx-auto">
                 <!-- Tab Navigation -->
                 <!-- Tab Navigation -->
-                <?php if ($has_vat_tu || $has_thanh_pham): ?>
-                    <div class="mb-6 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark p-2 flex gap-2">
-                        <?php if ($has_vat_tu): ?>
-                            <button type="button" onclick="switchTab('vat_tu')" id="tab-vat-tu"
-                                class="flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-primary text-white shadow-sm">
-                                <span class="flex items-center justify-center gap-2">
-                                    <span class="material-symbols-outlined">input</span>
-                                    Phiếu nhập vật tư
-                                </span>
-                            </button>
-                        <?php endif; ?>
+            <?php if ($has_vat_tu || $has_thanh_pham): ?>
+                <div class="mb-6 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark p-2 flex gap-2">
+                    <?php if ($has_vat_tu): ?>
+                        <button type="button" onclick="switchTab('vat_tu')" id="tab-vat-tu"
+                            class="flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-primary text-white shadow-sm">
+                            <span class="flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined">input</span>
+                                Phiếu nhập vật tư
+                            </span>
+                        </button>
+                    <?php endif; ?>
 
-                        <?php if ($has_thanh_pham): ?>
-                            <button type="button" onclick="switchTab('thanh_pham')" id="tab-thanh-pham"
-                                class="flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-transparent text-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800">
-                                <span class="flex items-center justify-center gap-2">
-                                    <span class="material-symbols-outlined">output</span>
-                                    Phiếu nhập thành phẩm
-                                </span>
-                            </button>
-                        <?php endif; ?>
-                    </div>
-                <?php else: ?>
-                    <div class="mb-6 p-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-center text-red-700 dark:text-red-300">
-                        Bạn không có quyền thêm phiếu nhập kho nào.
-                    </div>
-                <?php endif; ?>
+                    <?php if ($has_thanh_pham): ?>
+                        <button type="button" onclick="switchTab('thanh_pham')" id="tab-thanh-pham"
+                            class="flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-transparent text-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800">
+                            <span class="flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined">output</span>
+                                Phiếu nhập thành phẩm
+                            </span>
+                        </button>
+                    <?php endif; ?>
+                </div>
+            <?php else: ?>
+                <div class="mb-6 p-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-center text-red-700 dark:text-red-300">
+                    Bạn không có quyền thêm phiếu nhập kho nào.
+                </div>
+            <?php endif; ?>
 
                 <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm p-6 md:p-8">
 
@@ -459,7 +400,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-        // Dữ liệu từ PHP
+                // Dữ liệu từ PHP
         const loaiKhoToHangMap = {
             'L001': 'M001',
             'L002': 'M002',
@@ -524,7 +465,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById('ma_phieu_nhap').placeholder = (tabName === 'vat_tu') ? 'VD: PN-VT-001' : 'VD: PN-TP-001';
 
             // Lọc loại kho theo tab
-            const allowedCodes = (tabName === 'vat_tu') ? ['L001', 'L002', 'L003'] : ['L004'];
+            const allowedCodes = (tabName === 'vat_tu') ? ['L001','L002','L003'] : ['L004'];
             filterLoaiKhoOptions(allowedCodes);
 
             // Reset form chi tiết
@@ -532,7 +473,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             filterKhoAndHang();
         }
 
-        // Các hàm còn lại (filterLoaiKhoOptions, filterKhoAndHang, addRow, updateDonGia, tinhThanhTien, tinhTong) giữ nguyên
+// Các hàm còn lại (filterLoaiKhoOptions, filterKhoAndHang, addRow, updateDonGia, tinhThanhTien, tinhTong) giữ nguyên
         // Lọc options loại kho
         function filterLoaiKhoOptions(allowedCodes) {
             const select = document.getElementById('ma_loai_kho');

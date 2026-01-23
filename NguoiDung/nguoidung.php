@@ -589,7 +589,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                     id="edit-role-fields-manager" style="display:none">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium mb-1">Loại kho</label>
+                                            <label class="block text-sm font-medium mb-1 mt-4">Loại kho</label>
                                             <select name="ma_loai_kho"
                                                 class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-surface-dark">
                                                 <option value="">Chọn loại kho</option>
@@ -601,7 +601,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                             </select>
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-medium mb-1">Vùng miền</label>
+                                            <label class="block text-sm font-medium mb-1 mt-4">Vùng miền</label>
                                             <select name="ma_vung"
                                                 class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-surface-dark">
                                                 <option value="">Chọn vùng</option>
@@ -618,7 +618,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                 <!-- THỦ KHO -->
                                 <div class="mt-4 pt-4 border-t border-border-light dark:border-border-dark"
                                     id="edit-role-fields-storekeeper" style="display:none">
-                                    <label class="block text-sm font-medium mb-1">Kho quản lý</label>
+                                    <label class="block text-sm font-medium mb-1 mt-4">Kho quản lý</label>
                                     <select name="ma_kho"
                                         class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-surface-dark">
                                         <option value="">Chọn kho</option>
@@ -630,10 +630,6 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                     </select>
                                 </div>
 
-                                <span
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
-                                    <span class="material-symbols-outlined text-sm">expand_more</span>
-                                </span>
                             </div>
                         </div>
                         <div class="flex justify-end gap-3 pt-4 border-t border-border-light dark:border-border-dark">
@@ -939,31 +935,19 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
         const addUserForm = document.getElementById('addUserForm');
         if (addUserForm) {
             addUserForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                const formData = new FormData(this);
+                // Không cần preventDefault() nữa, để submit bình thường
+                // Hoặc nếu muốn validate trước, thêm validate ở đây rồi submit.
                 const submitBtn = document.getElementById('saveUserBtn');
                 const originalText = submitBtn.innerHTML;
 
-                // Disable button và hiển thị loading
+                // Disable button và hiển thị loading (tùy chọn, nhưng không cần fetch)
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>';
 
-                fetch('update_nguoidung.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .catch(error => {
-                        // Nếu response không phải JSON, redirect sẽ xảy ra tự động
-                        // Vì vậy ta gửi form bình thường
-                        return this.submit();
-                    })
-                    .finally(() => {
-                        // Restore button
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = originalText;
-                    });
+                // Submit form bình thường
+                this.submit();
+
+                // Note: Không cần finally vì redirect sẽ xử lý
             });
         }
 

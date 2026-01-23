@@ -212,8 +212,11 @@ $end_record = min($offset + $items_per_page, $total_records);
                                             class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-[#637588] dark:text-[#9ca3af]">
                                             DVT</th>
                                         <th
-                                            class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-[#637588] dark:text-[#9ca3af] w-[15%] text-right">
+                                            class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-[#637588] dark:text-[#9ca3af] w-[15%] text-left">
                                             Đơn giá</th>
+                                        <th
+                                            class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-[#637588] dark:text-[#9ca3af]">
+                                            Mức dự trù Min/Max</th>
                                         <th
                                             class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-[#637588] dark:text-[#9ca3af] text-right w-[15%]">
                                             Hành động</th>
@@ -228,35 +231,58 @@ $end_record = min($offset + $items_per_page, $total_records);
                                         </tr>
                                     <?php else: ?>
                                         <?php foreach ($thanh_pham_list as $tp): ?>
-                                            <tr class="group hover:bg-[#f8fafc] dark:hover:bg-[#243447] transition-colors">
+                                            <tr class="group hover:bg-[#f8fafc] dark:hover:bg-[#243447] transition-colors"
+                                                data-ma-hang="<?= htmlspecialchars($tp['ma_hang']) ?>"
+                                                data-ten-hang="<?= htmlspecialchars($tp['ten_hang']) ?>"
+                                                data-don-gia="<?= htmlspecialchars($tp['don_gia']) ?>"
+                                                data-don-vi-tinh="<?= htmlspecialchars($tp['don_vi_tinh']) ?>"
+                                                data-muc-du-tru-max="<?= htmlspecialchars($tp['muc_du_tru_max']) ?>"
+                                                data-muc-du-tru-min="<?= htmlspecialchars($tp['muc_du_tru_min']) ?>">
                                                 <td class="py-4 px-6 text-sm font-medium text-primary">
                                                     <?= htmlspecialchars($tp['ma_hang']) ?>
                                                 </td>
+
                                                 <td class="py-4 px-6 text-sm font-medium text-[#111418] dark:text-white">
                                                     <?= htmlspecialchars($tp['ten_hang']) ?>
                                                 </td>
-                                                <td class="py-4 px-6 text-sm text-[#111418] dark:text-white">
+
+                                                <td class="py-4 px-6 text-sm font-medium text-[#111418] dark:text-white">
                                                     <?= htmlspecialchars($tp['don_vi_tinh']) ?>
                                                 </td>
-                                                <td class="py-4 px-6 text-sm text-[#111418] dark:text-white text-right">
+
+                                                <td class="py-4 px-6 text-sm text-[#111418] dark:text-white">
                                                     <?= number_format($tp['don_gia'], 0, ',', '.') ?> đ
                                                 </td>
+
+                                                <td class="py-4 px-6 text-sm text-[#111418] dark:text-white">
+                                                    <div class="flex items-center gap-2">
+                                                        <span
+                                                            class="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                                                            Min: <?= htmlspecialchars($tp['muc_du_tru_min']) ?>
+                                                        </span>
+                                                        <span
+                                                            class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">
+                                                            Max: <?= htmlspecialchars($tp['muc_du_tru_max']) ?>
+                                                        </span>
+
+                                                    </div>
+                                                </td>
+
                                                 <td class="py-4 px-6 text-right">
                                                     <div class="flex items-center justify-end gap-2">
-                                                        <?php if (canEdit('thanhpham')): ?>
-                                                        <button
-                                                            onclick="openEditModal('<?= htmlspecialchars($tp['ma_hang'], ENT_QUOTES) ?>', '<?= htmlspecialchars($tp['ten_hang'], ENT_QUOTES) ?>', '<?= htmlspecialchars($tp['don_vi_tinh'], ENT_QUOTES) ?>', '<?= htmlspecialchars($tp['don_gia'], ENT_QUOTES) ?>')"
-                                                            class="p-1.5 rounded-md text-[#637588] hover:text-primary hover:bg-primary/10"
-                                                            title="Chỉnh sửa">
-                                                            <span class="material-symbols-outlined text-[20px]">edit</span>
-                                                        </button>
+                                                        <?php if (canEdit('vattu')): ?>
+                                                            <button onclick="openEditModal(this.closest('tr'))"
+                                                                class="p-1.5 rounded-md text-[#637588] hover:text-primary hover:bg-primary/10">
+                                                                <span class="material-symbols-outlined text-[20px]">edit</span>
+                                                            </button>
                                                         <?php endif; ?>
-                                                        <?php if (canDelete('thanhpham')): ?>
-                                                        <a href="xoa_thanhpham.php?ma_hang=<?= urlencode($tp['ma_hang']) ?>&page=<?= $current_page ?>&q=<?= urlencode($q) ?>"
-                                                            onclick="return confirm('Bạn có chắc muốn xóa thành phẩm này không?')"
-                                                            class="p-1.5 rounded-md text-[#637588] hover:text-red-500 hover:bg-red-50">
-                                                            <span class="material-symbols-outlined text-[20px]">delete</span>
-                                                        </a>
+
+                                                        <?php if (canDelete('vattu')): ?>
+                                                            <a href="xoa_thanhpham.php?ma_hang=<?= urlencode($tp['ma_hang']) ?>&page=<?= $current_page ?>&q=<?= urlencode($q) ?>"
+                                                                onclick="return confirm('Bạn có chắc muốn xóa vật tư này không?')"
+                                                                class="p-1.5 rounded-md text-[#637588] hover:text-red-500 hover:bg-red-50">
+                                                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                                                            </a>
                                                         <?php endif; ?>
                                                     </div>
                                                 </td>
@@ -407,8 +433,6 @@ $end_record = min($offset + $items_per_page, $total_records);
                             </div>
                             <p id="add_don_gia_error" class="mt-1 text-sm text-red-600 dark:text-red-400 hidden">Vui lòng nhập đơn giá hợp lệ (số không âm)</p>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1.5">
                             <label class="text-sm font-medium text-[#111418] dark:text-white">Mức dự trù Min <span class="text-red-500">*</span></label>
                             <input name="muc_du_tru_min" id="add_muc_du_tru_min" required
@@ -423,7 +447,6 @@ $end_record = min($offset + $items_per_page, $total_records);
                                 placeholder="Số lượng tối đa" type="number" min="0" step="0.01" />
                             <p id="add_muc_du_tru_max_error" class="mt-1 text-sm text-red-600 dark:text-red-400 hidden">Vui lòng nhập mức dự trù Max hợp lệ (số không âm và lớn hơn Min)</p>
                         </div>
-
                     </div>
                     <div
                         class="flex items-center justify-end gap-3 py-5 border-t border-[#e5e7eb] dark:border-[#2a3b4d] bg-[#f8fafc] dark:bg-[#243447] rounded-b-xl">
@@ -512,7 +535,7 @@ $end_record = min($offset + $items_per_page, $total_records);
                     </div>
 
                     <div
-                        class="flex items-center justify-end gap-3 p-5 border-t border-[#e5e7eb] dark:border-[#2a3b4d] bg-[#f8fafc] dark:bg-[#243447] rounded-b-xl mt-2">
+                        class="flex items-center justify-end gap-3 py-5 border-t border-[#e5e7eb] dark:border-[#2a3b4d] bg-[#f8fafc] dark:bg-[#243447] rounded-b-xl mt-2">
                         <button type="button" onclick="closeEditModal()"
                             class="h-10 px-5 rounded-lg border border-[#dce0e5] dark:border-[#2a3b4d] text-[#111418] dark:text-white text-sm font-medium hover:bg-gray-50 dark:hover:bg-[#2a3b4d] transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-gray-200">
                             Hủy
@@ -551,14 +574,22 @@ $end_record = min($offset + $items_per_page, $total_records);
             }
         }
 
-        function openEditModal(maHang, tenHang, donViTinh, donGia, mucDuTruMin, mucDuTruMax) {
+        function openEditModal(row) {
+            // Lấy dữ liệu từ data attributes
+            const maHang = row.getAttribute('data-ma-hang');
+            const tenHang = row.getAttribute('data-ten-hang');
+            const donGia = row.getAttribute('data-don-gia');
+            const donViTinh = row.getAttribute('data-don-vi-tinh');
+            const mucDuTruMax = row.getAttribute('data-muc-du-tru-max');
+            const mucDuTruMin = row.getAttribute('data-muc-du-tru-min');
+         
             document.getElementById("edit_ma_hang").value = maHang;
             document.getElementById("edit_ma_hang_display").value = maHang;
             document.getElementById("edit_ten_hang").value = tenHang;
             document.getElementById("edit_don_vi_tinh").value = donViTinh;
             document.getElementById("edit_don_gia").value = donGia;
-            document.getElementById("edit_muc_du_tru_min").value = mucDuTruMin || '';
-            document.getElementById("edit_muc_du_tru_max").value = mucDuTruMax || '';
+            document.getElementById("edit_muc_du_tru_min").value = mucDuTruMin;
+            document.getElementById("edit_muc_du_tru_max").value = mucDuTruMax;
 
             const modal = document.getElementById("editModal");
             modal.classList.remove("hidden");

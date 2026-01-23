@@ -7,19 +7,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update-warehouse'])) 
     $ten_kho = trim($_POST['warehouse-name'] ?? '');
     $dia_chi = trim($_POST['warehouse-address'] ?? '');
     $vung = trim($_POST['warehouse-vung'] ?? '');
-    $thu_kho = trim($_POST['warehouse-keeper'] ?? '');
     $loai_kho = trim($_POST['warehouse-type'] ?? '');
 
     if (!empty($ma_kho) && !empty($ten_kho) && !empty($dia_chi) && !empty($loai_kho)) {
         try {
             // Cập nhật kho hàng
-            $stmt = $pdo->prepare('UPDATE kho SET ten_kho = :ten_kho, dia_chi = :dia_chi, ma_vung = :ma_vung, ma_nd = :thu_kho, ma_loai_kho = :loai_kho WHERE ma_kho = :ma_kho');
+            $stmt = $pdo->prepare('UPDATE kho SET ten_kho = :ten_kho, dia_chi = :dia_chi, ma_vung = :ma_vung,  ma_loai_kho = :loai_kho WHERE ma_kho = :ma_kho');
             $stmt->execute([
                 ':ma_kho' => $ma_kho,
                 ':ten_kho' => $ten_kho,
                 ':dia_chi' => $dia_chi,
                 ':ma_vung' => $vung,
-                ':thu_kho' => !empty($thu_kho) ? $thu_kho : null,
                 ':loai_kho' => $loai_kho
             ]);
 

@@ -1,5 +1,11 @@
 <?php
 include '../include/connect.php';
+include '../include/permissions.php';
+
+if (!canEdit('thanhpham')) {
+    header('Location: thanhpham.php?error=Không có quyền sửa thành phẩm');
+    exit;
+}
 
 $ten_hang = trim($_POST['ten_hang'] ?? '');
 $don_gia = $_POST['don_gia'] ?? '';

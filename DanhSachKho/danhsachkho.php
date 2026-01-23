@@ -340,15 +340,15 @@ if ($end_page - $start_page < $max_pages_to_show - 1) {
                                     scope="col">
                                     Địa chỉ
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider w-[20%]"
+                                <th class="px-6 py-3 text-left text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider w-[15%]"
                                     scope="col">
                                     Vùng miền
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider w-[20%]"
+                                <th class="px-6 py-3 text-left text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider w-[15%]"
                                     scope="col">
                                     Thủ kho
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider w-[15%]"
+                                <th class="px-6 py-3 text-left text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider w-[20%]"
                                     scope="col">
                                     Loại Kho
                                 </th>
@@ -638,7 +638,7 @@ if ($end_page - $start_page < $max_pages_to_show - 1) {
                                 class="block w-full border-border-light dark:border-border-dark rounded-lg bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark focus:ring-primary focus:border-primary sm:text-sm py-2 px-3"
                                 id="edit-warehouse-address" name="warehouse-address" placeholder="Nhập địa chỉ..." type="text" required />
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-1"
                                     for="edit-warehouse-vung">
@@ -655,7 +655,7 @@ if ($end_page - $start_page < $max_pages_to_show - 1) {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div>
+                            <div class="hidden">
                                 <label class="block text-sm font-medium text-text-light dark:text-text-dark mb-1"
                                     for="edit-warehouse-keeper">
                                     Thủ kho
