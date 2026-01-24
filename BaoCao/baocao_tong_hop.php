@@ -244,7 +244,7 @@ if (!empty($loai_kho) && isset($mapping_loai_kho_hang[$loai_kho])) {
                             </select>
                         </div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 175px;">
+                    <div style="display: flex; align-items: center; gap: 150px;">
                         <div class="col-md-3">
                             <label for="ngay_bat_dau" class="form-label">Từ ngày</label>
                             <input type="date" class="form-control" id="ngay_bat_dau" name="ngay_bat_dau"
