@@ -45,11 +45,11 @@ include '../include/connect.php';
 
     .cards-container {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        display: flex;
-        justify-content: center;
-        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
         margin: auto 15px;
+        max-width: 1400px;
+        padding: 0 10px;
     }
 
     .report-card {
@@ -62,6 +62,10 @@ include '../include/connect.php';
         transition: all 0.3s ease;
         border-top: 4px solid;
         cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        min-height: 400px;
+        height: 100%;
     }
 
     .report-card:hover {
@@ -69,6 +73,18 @@ include '../include/connect.php';
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         text-decoration: none;
         color: inherit;
+    }
+
+    @media (max-width: 1200px) {
+        .cards-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .cards-container {
+            grid-template-columns: 1fr;
+        }
     }
 
     .report-card.card-chart1 {
@@ -99,12 +115,19 @@ include '../include/connect.php';
         font-size: 3em;
         margin-bottom: 15px;
         display: block;
+        text-align: center;
+        min-height: 60px;
     }
 
     .card-title {
         font-size: 1.5em;
         font-weight: bold;
         margin-bottom: 10px;
+        text-align: center;
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .card-description {
@@ -112,15 +135,18 @@ include '../include/connect.php';
         font-size: 0.95em;
         margin-bottom: 15px;
         line-height: 1.5;
+        flex-grow: 0;
     }
 
     .card-features {
         font-size: 0.85em;
         color: #999;
+        flex-grow: 1;
+        margin-bottom: 15px;
     }
 
     .card-features ul {
-        margin: 0;
+        margin: 5px 0 0 0;
         padding-left: 20px;
     }
 
@@ -130,14 +156,17 @@ include '../include/connect.php';
 
     .btn-access {
         display: inline-block;
-        margin-top: 15px;
-        padding: 8px 20px;
+        margin-top: auto;
+        padding: 10px 20px;
         background-color: #007bff;
         color: white;
         border-radius: 5px;
         text-decoration: none;
         font-weight: bold;
         transition: background-color 0.3s;
+        text-align: center;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .btn-access:hover {
@@ -235,6 +264,25 @@ include '../include/connect.php';
                         </ul>
                     </div>
                     <div class="btn-access">Xem báo cáo →</div>
+                </a>
+
+                <!-- Card 4: Báo cáo tổng hợp -->
+                <a href="baocao_tong_hop.php" class="report-card card-table" style="border-top-color: #007bff;">
+                    <span class="card-icon" style="color: #007bff;">📑</span>
+                    <div class="card-title">Báo Cáo Tổng Hợp</div>
+                    <div class="card-description">
+                        Xuất Excel báo cáo tổng hợp 3 bảng: biến động kho, biến động hàng hóa, bảng cân đối
+                    </div>
+                    <div class="card-features">
+                        <strong>Bộ lọc:</strong>
+                        <ul>
+                            <li>Vùng miền</li>
+                            <li>Loại kho</li>
+                            <li>Đơn vị tính</li>
+                            <li>Khoảng thời gian</li>
+                        </ul>
+                    </div>
+                    <div class="btn-access" style="background-color: #007bff; margin-top: auto;">Xem báo cáo →</div>
                 </a>
             </div>
 

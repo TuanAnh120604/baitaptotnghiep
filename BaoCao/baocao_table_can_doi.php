@@ -1,6 +1,11 @@
 <?php
 include '../include/connect.php';
+include '../include/permissions.php';
+checkAccess('thongke');
 
+// Lấy thông tin user
+$role = trim($_SESSION['role'] ?? '');
+$ma_nd = $_SESSION['MaND'] ?? null;
 
 // Lấy các tham số lọc
 $table_ma_vung = isset($_GET['table_ma_vung']) ? $_GET['table_ma_vung'] : '';
@@ -9,12 +14,55 @@ $table_ma_kho = isset($_GET['table_ma_kho']) ? $_GET['table_ma_kho'] : '';
 $table_ngay_bat_dau = isset($_GET['table_ngay_bat_dau']) ? $_GET['table_ngay_bat_dau'] : date('Y-01-01');
 $table_ngay_ket_thuc = isset($_GET['table_ngay_ket_thuc']) ? $_GET['table_ngay_ket_thuc'] : date('Y-m-d');
 
-// Lấy danh sách vùng miền
-$stmt_vung = $pdo->query("SELECT * FROM vung_mien ORDER BY ten_vung");
+// Xây dựng điều kiện lọc kho theo quyền
+$kho_condition = '';
+$kho_params = [];
+if ($role === 'Thủ kho' && $ma_nd) {
+    $kho_condition = 'AND k.ma_nd = ?';
+    $kho_params[] = $ma_nd;
+} elseif ($role === 'Quản lý kho' && $ma_nd) {
+    $kho_condition = 'AND k.ma_kho IN (
+        SELECT k2.ma_kho 
+        FROM kho k2 
+        JOIN phan_quyen pq ON k2.ma_vung = pq.ma_vung AND k2.ma_loai_kho = pq.ma_loai_kho 
+        WHERE pq.ma_nd = ?
+    )';
+    $kho_params[] = $ma_nd;
+}
+
+// Lấy danh sách vùng miền (theo quyền)
+$sql_vung = "SELECT * FROM vung_mien WHERE 1=1";
+$params_vung = [];
+if ($role === 'Thủ kho' && $ma_nd) {
+    $sql_vung .= " AND ma_vung IN (SELECT DISTINCT ma_vung FROM kho WHERE ma_nd = ?)";
+    $params_vung[] = $ma_nd;
+} elseif ($role === 'Quản lý kho' && $ma_nd) {
+    $sql_vung .= " AND ma_vung IN (SELECT DISTINCT ma_vung FROM phan_quyen WHERE ma_nd = ?)";
+    $params_vung[] = $ma_nd;
+}
+$sql_vung .= " ORDER BY ten_vung";
+$stmt_vung = $pdo->prepare($sql_vung);
+$stmt_vung->execute($params_vung);
 $danh_sach_vung = $stmt_vung->fetchAll(PDO::FETCH_ASSOC);
 
-// Lấy danh sách loại kho
-$stmt_loai_kho = $pdo->query("SELECT * FROM loai_kho ORDER BY ma_loai_kho");
+// Lấy danh sách loại kho (theo quyền)
+$sql_loai_kho = "SELECT DISTINCT lk.* FROM loai_kho lk JOIN kho k ON lk.ma_loai_kho = k.ma_loai_kho WHERE 1=1";
+$params_loai_kho = [];
+if ($role === 'Thủ kho' && $ma_nd) {
+    $sql_loai_kho .= " AND k.ma_nd = ?";
+    $params_loai_kho[] = $ma_nd;
+} elseif ($role === 'Quản lý kho' && $ma_nd) {
+    $sql_loai_kho .= " AND k.ma_kho IN (
+        SELECT k2.ma_kho 
+        FROM kho k2 
+        JOIN phan_quyen pq ON k2.ma_vung = pq.ma_vung AND k2.ma_loai_kho = pq.ma_loai_kho 
+        WHERE pq.ma_nd = ?
+    )";
+    $params_loai_kho[] = $ma_nd;
+}
+$sql_loai_kho .= " ORDER BY lk.ma_loai_kho";
+$stmt_loai_kho = $pdo->prepare($sql_loai_kho);
+$stmt_loai_kho->execute($params_loai_kho);
 $danh_sach_loai_kho = $stmt_loai_kho->fetchAll(PDO::FETCH_ASSOC);
 
 // Lấy danh sách kho dựa trên vùng miền và loại kho được chọn
@@ -30,6 +78,11 @@ if (!empty($table_ma_vung)) {
 if (!empty($table_loai_kho)) {
     $sql_kho .= " AND k.ma_loai_kho = ?";
     $params_kho[] = $table_loai_kho;
+}
+
+if (!empty($kho_condition)) {
+    $sql_kho .= " " . $kho_condition;
+    $params_kho = array_merge($params_kho, $kho_params);
 }
 
 $sql_kho .= " ORDER BY k.ma_kho";
@@ -83,6 +136,12 @@ $sql_bang = "
 ";
 
 $params_bang = [$table_ngay_bat_dau, $table_ngay_bat_dau, $table_ngay_ket_thuc, $table_ngay_bat_dau, $table_ngay_ket_thuc];
+
+// Thêm điều kiện phân quyền vào đầu WHERE clause
+if (!empty($kho_condition)) {
+    $sql_bang .= " " . $kho_condition;
+    $params_bang = array_merge($params_bang, $kho_params);
+}
 
 if (!empty($table_ma_vung)) {
     $sql_bang .= " AND k.ma_vung = ?";
@@ -219,6 +278,8 @@ $ket_qua = $stmt_bang->fetchAll(PDO::FETCH_ASSOC);
 
     .g-3{
         display: flex;
+        juistify-content: space-between;
+        gap: 4px;
     }
 
     .w-100{
@@ -228,8 +289,13 @@ $ket_qua = $stmt_bang->fetchAll(PDO::FETCH_ASSOC);
     }
 
     .w-100:hover{
-        background-color: #606060;
+        background-color: #1574c7;
     }
+
+    .col-md-2 {
+        width: 14%;
+    }
+    
     </style>
 </head>
 
@@ -305,6 +371,12 @@ $ket_qua = $stmt_bang->fetchAll(PDO::FETCH_ASSOC);
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-danger w-100">Lọc dữ liệu</button>
                         </div>
+                    </div>
+                    <div class="col-md-2" style="margin-top: 51px; background-color: #0d6efd; border-radius: 5px; height: 36px;">
+                            <a href="xuat_excel_table_can_doi.php?<?php echo http_build_query($_GET); ?>" 
+                            class="d-flex excel" style="color: #f9f9f9; text-decoration: none;  padding: 6px; justify-content: center; ">
+                                📥 Xuất Excel
+                            </a>
                     </div>
                 </form>
             </div>

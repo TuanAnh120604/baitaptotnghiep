@@ -1,6 +1,11 @@
 <?php
 include '../include/connect.php';
+include '../include/permissions.php';
+checkAccess('thongke');
 
+// Lấy thông tin user
+$role = trim($_SESSION['role'] ?? '');
+$ma_nd = $_SESSION['MaND'] ?? null;
 
 // Lấy các tham số lọc
 $chart2_ma_vung = isset($_GET['chart2_ma_vung']) ? $_GET['chart2_ma_vung'] : '';
@@ -17,12 +22,55 @@ $mapping_loai_kho_hang = [
     'L004' => 'M004'
 ];
 
-// Lấy danh sách vùng miền
-$stmt_vung = $pdo->query("SELECT * FROM vung_mien ORDER BY ten_vung");
+// Xây dựng điều kiện lọc kho theo quyền
+$kho_condition = '';
+$kho_params = [];
+if ($role === 'Thủ kho' && $ma_nd) {
+    $kho_condition = 'AND k.ma_nd = ?';
+    $kho_params[] = $ma_nd;
+} elseif ($role === 'Quản lý kho' && $ma_nd) {
+    $kho_condition = 'AND k.ma_kho IN (
+        SELECT k2.ma_kho 
+        FROM kho k2 
+        JOIN phan_quyen pq ON k2.ma_vung = pq.ma_vung AND k2.ma_loai_kho = pq.ma_loai_kho 
+        WHERE pq.ma_nd = ?
+    )';
+    $kho_params[] = $ma_nd;
+}
+
+// Lấy danh sách vùng miền (theo quyền)
+$sql_vung = "SELECT * FROM vung_mien WHERE 1=1";
+$params_vung = [];
+if ($role === 'Thủ kho' && $ma_nd) {
+    $sql_vung .= " AND ma_vung IN (SELECT DISTINCT ma_vung FROM kho WHERE ma_nd = ?)";
+    $params_vung[] = $ma_nd;
+} elseif ($role === 'Quản lý kho' && $ma_nd) {
+    $sql_vung .= " AND ma_vung IN (SELECT DISTINCT ma_vung FROM phan_quyen WHERE ma_nd = ?)";
+    $params_vung[] = $ma_nd;
+}
+$sql_vung .= " ORDER BY ten_vung";
+$stmt_vung = $pdo->prepare($sql_vung);
+$stmt_vung->execute($params_vung);
 $danh_sach_vung = $stmt_vung->fetchAll(PDO::FETCH_ASSOC);
 
-// Lấy danh sách loại kho
-$stmt_loai_kho = $pdo->query("SELECT * FROM loai_kho ORDER BY ma_loai_kho");
+// Lấy danh sách loại kho (theo quyền)
+$sql_loai_kho = "SELECT DISTINCT lk.* FROM loai_kho lk JOIN kho k ON lk.ma_loai_kho = k.ma_loai_kho WHERE 1=1";
+$params_loai_kho = [];
+if ($role === 'Thủ kho' && $ma_nd) {
+    $sql_loai_kho .= " AND k.ma_nd = ?";
+    $params_loai_kho[] = $ma_nd;
+} elseif ($role === 'Quản lý kho' && $ma_nd) {
+    $sql_loai_kho .= " AND k.ma_kho IN (
+        SELECT k2.ma_kho 
+        FROM kho k2 
+        JOIN phan_quyen pq ON k2.ma_vung = pq.ma_vung AND k2.ma_loai_kho = pq.ma_loai_kho 
+        WHERE pq.ma_nd = ?
+    )";
+    $params_loai_kho[] = $ma_nd;
+}
+$sql_loai_kho .= " ORDER BY lk.ma_loai_kho";
+$stmt_loai_kho = $pdo->prepare($sql_loai_kho);
+$stmt_loai_kho->execute($params_loai_kho);
 $danh_sach_loai_kho = $stmt_loai_kho->fetchAll(PDO::FETCH_ASSOC);
 
 // Lấy danh sách hàng hóa
@@ -51,7 +99,7 @@ while ($ngay_hien_tai <= $ngay_ket_thuc_ts) {
     $ngay_hien_tai = strtotime('+1 day', $ngay_hien_tai);
 }
 
-// Lấy dữ liệu nhập theo ngày
+// Lấy dữ liệu nhập theo ngày (chỉ lấy phiếu đã xác nhận)
 $sql_daily_nhap = "
     SELECT 
         DATE(pn.ngay_nhap) as ngay,
@@ -60,9 +108,16 @@ $sql_daily_nhap = "
     JOIN kho k ON pn.ma_kho = k.ma_kho
     JOIN ct_phieu_nhap ct ON pn.ma_phieu_nhap = ct.ma_phieu_nhap
     WHERE pn.ngay_nhap BETWEEN ? AND ?
+      AND pn.trang_thai = 'da_xac_nhan'
 ";
 
 $params_daily = [$chart2_ngay_bat_dau, $chart2_ngay_ket_thuc];
+
+// Thêm điều kiện phân quyền vào đầu WHERE clause
+if (!empty($kho_condition)) {
+    $sql_daily_nhap .= " " . $kho_condition;
+    $params_daily = array_merge($params_daily, $kho_params);
+}
 
 if (!empty($chart2_ma_vung)) {
     $sql_daily_nhap .= " AND k.ma_vung = ?";
@@ -85,7 +140,7 @@ $stmt_daily = $pdo->prepare($sql_daily_nhap);
 $stmt_daily->execute($params_daily);
 $daily_nhap = $stmt_daily->fetchAll(PDO::FETCH_ASSOC);
 
-// Lấy dữ liệu xuất theo ngày
+// Lấy dữ liệu xuất theo ngày (chỉ lấy phiếu đã xác nhận)
 $sql_daily_xuat = "
     SELECT 
         DATE(px.ngay_xuat) as ngay,
@@ -94,9 +149,16 @@ $sql_daily_xuat = "
     JOIN kho k ON px.ma_kho = k.ma_kho
     JOIN ct_phieu_xuat ct ON px.ma_phieu_xuat = ct.ma_phieu_xuat
     WHERE px.ngay_xuat BETWEEN ? AND ?
+      AND px.trang_thai = 'da_xac_nhan'
 ";
 
 $params_daily_xuat = [$chart2_ngay_bat_dau, $chart2_ngay_ket_thuc];
+
+// Thêm điều kiện phân quyền vào đầu WHERE clause
+if (!empty($kho_condition)) {
+    $sql_daily_xuat .= " " . $kho_condition;
+    $params_daily_xuat = array_merge($params_daily_xuat, $kho_params);
+}
 
 if (!empty($chart2_ma_vung)) {
     $sql_daily_xuat .= " AND k.ma_vung = ?";
@@ -227,7 +289,12 @@ foreach ($danh_sach_ngay as &$data) {
     }
 
     .w-100:hover{
-        background-color: #606060;
+        background-color: #1574c7;
+        color: #f9f9f9;
+    }
+
+    .col-md-2 {
+        width: 14%;
     }
     </style>
 </head>
@@ -305,7 +372,14 @@ foreach ($danh_sach_ngay as &$data) {
                             <button type="submit" class="btn btn-warning w-100">Lọc dữ liệu</button>
                         </div>
                     </div>
+                    <div class="col-md-2" style="margin-top: 51px; background-color: #0d6efd; border-radius: 5px; height: 36px;">
+                        <a href="xuat_excel_chart2_hang_hoa.php?<?php echo http_build_query($_GET); ?>" 
+                        class="d-flex excel" style="color: #f9f9f9; text-decoration: none;  padding: 6px; justify-content: center; ">
+                            📥 Xuất Excel
+                        </a>
+                    </div>
                 </form>
+                
             </div>
 
             <!-- Biểu đồ biến động theo ngày -->

@@ -160,83 +160,50 @@ if ($ma_hang_selected) {
 // Lấy log biến động nếu có mặt hàng được chọn (chỉ từ các kho mà user có quyền)
 $log_bien_dong = [];
 if ($ma_hang_selected) {
-    // Xây dựng điều kiện lọc kho cho log
-    $log_kho_condition_nhap = '';
-    $log_kho_condition_xuat = '';
-    $log_kho_params = [];
-    
-    if ($role === 'Thủ kho' && $ma_nd) {
-        $log_kho_condition_nhap = 'AND pn.ma_kho IN (SELECT ma_kho FROM kho WHERE ma_nd = :log_ma_nd)';
-        $log_kho_condition_xuat = 'AND px.ma_kho IN (SELECT ma_kho FROM kho WHERE ma_nd = :log_ma_nd)';
-        $log_kho_params[':log_ma_nd'] = $ma_nd;
-    } elseif ($role === 'Quản lý kho' && $ma_nd) {
-        $log_kho_condition_nhap = 'AND pn.ma_kho IN (
-            SELECT k2.ma_kho 
-            FROM kho k2 
-            JOIN phan_quyen pq ON k2.ma_vung = pq.ma_vung AND k2.ma_loai_kho = pq.ma_loai_kho 
-            WHERE pq.ma_nd = :log_ma_nd
-        )';
-        $log_kho_condition_xuat = 'AND px.ma_kho IN (
-            SELECT k2.ma_kho 
-            FROM kho k2 
-            JOIN phan_quyen pq ON k2.ma_vung = pq.ma_vung AND k2.ma_loai_kho = pq.ma_loai_kho 
-            WHERE pq.ma_nd = :log_ma_nd
-        )';
-        $log_kho_params[':log_ma_nd'] = $ma_nd;
-    }
+    // Query trực tiếp từ the_kho để đảm bảo thứ tự đúng theo thời gian thực tế
+    // Bảng the_kho đã được cập nhật theo đúng thứ tự thời gian, nên sắp xếp theo ngày và ma_the_kho sẽ cho thứ tự chính xác
     $sql_log = "
     SELECT
-        e.ngay,
-        DATE_FORMAT(e.ngay, '%d/%m/%Y') AS ngay_format,
-        e.loai_phat_sinh,
-        e.so_ct,
-        e.so_luong_nhap,
-        e.so_luong_xuat,
-        e.ma_kho,
+        tk.ngay,
+        DATE_FORMAT(tk.ngay, '%d/%m/%Y') AS ngay_format,
+        CASE 
+            WHEN tk.so_ct LIKE 'PN-%' THEN 'Nhập'
+            WHEN tk.so_ct LIKE 'PX-%' THEN 'Xuất'
+            ELSE 'Khác'
+        END AS loai_phat_sinh,
+        tk.so_ct,
+        CASE 
+            WHEN tk.so_ct LIKE 'PN-%' THEN 
+                (SELECT ctpn.so_luong_nhap 
+                 FROM ct_phieu_nhap ctpn 
+                 JOIN phieu_nhap pn ON ctpn.ma_phieu_nhap = pn.ma_phieu_nhap 
+                 WHERE pn.ma_phieu_nhap = tk.so_ct AND ctpn.ma_hang = tk.ma_hang 
+                 LIMIT 1)
+            ELSE 0
+        END AS so_luong_nhap,
+        CASE 
+            WHEN tk.so_ct LIKE 'PX-%' THEN 
+                (SELECT ctpx.so_luong_xuat 
+                 FROM ct_phieu_xuat ctpx 
+                 JOIN phieu_xuat px ON ctpx.ma_phieu_xuat = px.ma_phieu_xuat 
+                 WHERE px.ma_phieu_xuat = tk.so_ct AND ctpx.ma_hang = tk.ma_hang 
+                 LIMIT 1)
+            ELSE 0
+        END AS so_luong_xuat,
+        tk.ma_kho,
         k.ten_kho,
         tk.so_luong_ton AS ton_sau
-    FROM (
-        SELECT
-            pn.ngay_nhap AS ngay,
-            pn.ma_phieu_nhap AS so_ct,
-            'Nhập' AS loai_phat_sinh,
-            ctpn.so_luong_nhap AS so_luong_nhap,
-            0 AS so_luong_xuat,
-            pn.ma_kho,
-            ctpn.ma_hang
-        FROM ct_phieu_nhap ctpn
-        JOIN phieu_nhap pn ON ctpn.ma_phieu_nhap = pn.ma_phieu_nhap
-        WHERE ctpn.ma_hang = :ma_hang_nhap AND pn.trang_thai = 'da_xac_nhan'
-        $log_kho_condition_nhap
-
-        UNION ALL
-
-        SELECT
-            px.ngay_xuat AS ngay,
-            px.ma_phieu_xuat AS so_ct,
-            'Xuất' AS loai_phat_sinh,
-            0 AS so_luong_nhap,
-            ctpx.so_luong_xuat AS so_luong_xuat,
-            px.ma_kho,
-            ctpx.ma_hang
-        FROM ct_phieu_xuat ctpx
-        JOIN phieu_xuat px ON ctpx.ma_phieu_xuat = px.ma_phieu_xuat
-        WHERE ctpx.ma_hang = :ma_hang_xuat AND px.trang_thai = 'da_xac_nhan'
-        $log_kho_condition_xuat
-    ) e
-    LEFT JOIN kho k ON e.ma_kho = k.ma_kho
-    LEFT JOIN the_kho tk ON tk.so_ct = e.so_ct 
-        AND tk.ma_hang = e.ma_hang 
-        AND tk.ma_kho = e.ma_kho
-        -- Bỏ hoặc comment dòng dưới nếu loai_phat_sinh không khớp
-        -- AND tk.loai_phat_sinh = CASE WHEN e.loai_phat_sinh = 'Nhập' THEN 'Nhập kho' ELSE 'Xuất kho' END
-    ORDER BY e.ngay DESC, e.so_ct DESC
+    FROM the_kho tk
+    JOIN kho k ON tk.ma_kho = k.ma_kho
+    WHERE tk.ma_hang = :ma_hang_log
+    " . $kho_condition . "
+    ORDER BY tk.ngay DESC, tk.ma_the_kho DESC
     LIMIT 100
 ";
+    
     $stmt_log = $pdo->prepare($sql_log);
-    $stmt_log->bindValue(':ma_hang_nhap', $ma_hang_selected);
-    $stmt_log->bindValue(':ma_hang_xuat', $ma_hang_selected);
-    foreach ($log_kho_params as $key => $value) {
+    $stmt_log->bindValue(':ma_hang_log', $ma_hang_selected);
+    foreach ($kho_params as $key => $value) {
         $stmt_log->bindValue($key, $value);
     }
     $stmt_log->execute();

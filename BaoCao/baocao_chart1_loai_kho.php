@@ -1,5 +1,11 @@
 <?php
 include '../include/connect.php';
+include '../include/permissions.php';
+checkAccess('thongke');
+
+// Lấy thông tin user
+$role = trim($_SESSION['role'] ?? '');
+$ma_nd = $_SESSION['MaND'] ?? null;
 
 // Lấy các tham số lọc cho BIỂU ĐỒ LOẠI KHO
 $chart1_ma_vung = isset($_GET['chart1_ma_vung']) ? $_GET['chart1_ma_vung'] : '';
@@ -16,12 +22,39 @@ $mapping_loai_kho_hang = [
     'L004' => 'M004'
 ];
 
-// Lấy danh sách vùng miền
-$stmt_vung = $pdo->query("SELECT * FROM vung_mien ORDER BY ten_vung");
+// Lấy danh sách vùng miền (theo quyền)
+$sql_vung = "SELECT * FROM vung_mien WHERE 1=1";
+$params_vung = [];
+if ($role === 'Thủ kho' && $ma_nd) {
+    $sql_vung .= " AND ma_vung IN (SELECT DISTINCT ma_vung FROM kho WHERE ma_nd = ?)";
+    $params_vung[] = $ma_nd;
+} elseif ($role === 'Quản lý kho' && $ma_nd) {
+    $sql_vung .= " AND ma_vung IN (SELECT DISTINCT ma_vung FROM phan_quyen WHERE ma_nd = ?)";
+    $params_vung[] = $ma_nd;
+}
+$sql_vung .= " ORDER BY ten_vung";
+$stmt_vung = $pdo->prepare($sql_vung);
+$stmt_vung->execute($params_vung);
 $danh_sach_vung = $stmt_vung->fetchAll(PDO::FETCH_ASSOC);
 
-// Lấy danh sách loại kho
-$stmt_loai_kho = $pdo->query("SELECT * FROM loai_kho ORDER BY ma_loai_kho");
+// Lấy danh sách loại kho (theo quyền)
+$sql_loai_kho = "SELECT DISTINCT lk.* FROM loai_kho lk JOIN kho k ON lk.ma_loai_kho = k.ma_loai_kho WHERE 1=1";
+$params_loai_kho = [];
+if ($role === 'Thủ kho' && $ma_nd) {
+    $sql_loai_kho .= " AND k.ma_nd = ?";
+    $params_loai_kho[] = $ma_nd;
+} elseif ($role === 'Quản lý kho' && $ma_nd) {
+    $sql_loai_kho .= " AND k.ma_kho IN (
+        SELECT k2.ma_kho 
+        FROM kho k2 
+        JOIN phan_quyen pq ON k2.ma_vung = pq.ma_vung AND k2.ma_loai_kho = pq.ma_loai_kho 
+        WHERE pq.ma_nd = ?
+    )";
+    $params_loai_kho[] = $ma_nd;
+}
+$sql_loai_kho .= " ORDER BY lk.ma_loai_kho";
+$stmt_loai_kho = $pdo->prepare($sql_loai_kho);
+$stmt_loai_kho->execute($params_loai_kho);
 $danh_sach_loai_kho = $stmt_loai_kho->fetchAll(PDO::FETCH_ASSOC);
 
 // Lấy danh sách DVT dựa trên loại kho được chọn
@@ -33,6 +66,22 @@ if (!empty($chart1_loai_kho) && isset($mapping_loai_kho_hang[$chart1_loai_kho]))
     $danh_sach_dvt = $stmt_dvt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+// Xây dựng điều kiện lọc kho theo quyền
+$kho_condition = '';
+$kho_params = [];
+if ($role === 'Thủ kho' && $ma_nd) {
+    $kho_condition = 'AND k.ma_nd = ?';
+    $kho_params[] = $ma_nd;
+} elseif ($role === 'Quản lý kho' && $ma_nd) {
+    $kho_condition = 'AND k.ma_kho IN (
+        SELECT k2.ma_kho 
+        FROM kho k2 
+        JOIN phan_quyen pq ON k2.ma_vung = pq.ma_vung AND k2.ma_loai_kho = pq.ma_loai_kho 
+        WHERE pq.ma_nd = ?
+    )';
+    $kho_params[] = $ma_nd;
+}
+
 // ============ QUERY: BIỂU ĐỒ BIẾN ĐỘNG THEO LOẠI KHO ============
 $sql_bieu_do_loai_kho = "
     SELECT 
@@ -40,13 +89,21 @@ $sql_bieu_do_loai_kho = "
         COALESCE(SUM(ct.so_luong_nhap), 0) as tong_nhap
     FROM kho k
     JOIN loai_kho lk ON k.ma_loai_kho = lk.ma_loai_kho
-    LEFT JOIN phieu_nhap pn ON k.ma_kho = pn.ma_kho AND pn.ngay_nhap BETWEEN ? AND ?
+    LEFT JOIN phieu_nhap pn ON k.ma_kho = pn.ma_kho 
+        AND pn.ngay_nhap BETWEEN ? AND ?
+        AND pn.trang_thai = 'da_xac_nhan'
     LEFT JOIN ct_phieu_nhap ct ON pn.ma_phieu_nhap = ct.ma_phieu_nhap
     LEFT JOIN hang_hoa hh ON ct.ma_hang = hh.ma_hang
     WHERE 1=1
 ";
 
 $params_bieu_do_loai_kho = [$chart1_ngay_bat_dau, $chart1_ngay_ket_thuc];
+
+// Thêm điều kiện phân quyền vào đầu WHERE clause
+if (!empty($kho_condition)) {
+    $sql_bieu_do_loai_kho .= " " . $kho_condition;
+    $params_bieu_do_loai_kho = array_merge($params_bieu_do_loai_kho, $kho_params);
+}
 
 if (!empty($chart1_ma_vung)) {
     $sql_bieu_do_loai_kho .= " AND k.ma_vung = ?";
@@ -69,15 +126,134 @@ $stmt_bieu_do = $pdo->prepare($sql_bieu_do_loai_kho);
 $stmt_bieu_do->execute($params_bieu_do_loai_kho);
 $data_bieu_do_loai_kho_temp = $stmt_bieu_do->fetchAll(PDO::FETCH_ASSOC);
 
-// Gộp dữ liệu loại kho
+// ============ QUERY: TỔNG XUẤT THEO LOẠI KHO ============
+$sql_bieu_do_xuat_loai_kho = "
+    SELECT
+        lk.ten_loai_kho,
+        COALESCE(SUM(ct.so_luong_xuat), 0) as tong_xuat
+    FROM kho k
+    JOIN loai_kho lk ON k.ma_loai_kho = lk.ma_loai_kho
+    LEFT JOIN phieu_xuat px ON k.ma_kho = px.ma_kho 
+        AND px.ngay_xuat BETWEEN ? AND ?
+        AND px.trang_thai = 'da_xac_nhan'
+    LEFT JOIN ct_phieu_xuat ct ON px.ma_phieu_xuat = ct.ma_phieu_xuat
+    LEFT JOIN hang_hoa hh ON ct.ma_hang = hh.ma_hang
+    WHERE 1=1
+";
+
+$params_bieu_do_xuat = [$chart1_ngay_bat_dau, $chart1_ngay_ket_thuc];
+
+// Thêm điều kiện phân quyền vào đầu WHERE clause
+if (!empty($kho_condition)) {
+    $sql_bieu_do_xuat_loai_kho .= " " . $kho_condition;
+    $params_bieu_do_xuat = array_merge($params_bieu_do_xuat, $kho_params);
+}
+
+if (!empty($chart1_ma_vung)) {
+    $sql_bieu_do_xuat_loai_kho .= " AND k.ma_vung = ?";
+    $params_bieu_do_xuat[] = $chart1_ma_vung;
+}
+
+if (!empty($chart1_loai_kho)) {
+    $sql_bieu_do_xuat_loai_kho .= " AND k.ma_loai_kho = ?";
+    $params_bieu_do_xuat[] = $chart1_loai_kho;
+}
+
+if (!empty($chart1_don_vi_tinh)) {
+    $sql_bieu_do_xuat_loai_kho .= " AND hh.don_vi_tinh = ?";
+    $params_bieu_do_xuat[] = $chart1_don_vi_tinh;
+}
+
+$sql_bieu_do_xuat_loai_kho .= " GROUP BY lk.ten_loai_kho ORDER BY lk.ma_loai_kho";
+
+$stmt_bieu_do_xuat = $pdo->prepare($sql_bieu_do_xuat_loai_kho);
+$stmt_bieu_do_xuat->execute($params_bieu_do_xuat);
+$data_bieu_do_xuat_temp = $stmt_bieu_do_xuat->fetchAll(PDO::FETCH_ASSOC);
+
+// ============ QUERY: TỒN CUỐI KỲ THEO LOẠI KHO (dựa trên the_kho) ============
+// Lấy bản ghi mới nhất của từng (ma_kho, ma_hang) đến ngày kết thúc, rồi cộng tồn theo loại kho
+$sql_bieu_do_ton_loai_kho = "
+    SELECT
+        lk.ten_loai_kho,
+        COALESCE(SUM(tk.so_luong_ton), 0) as ton_cuoi_ky
+    FROM the_kho tk
+    JOIN kho k ON tk.ma_kho = k.ma_kho
+    JOIN loai_kho lk ON k.ma_loai_kho = lk.ma_loai_kho
+    JOIN hang_hoa hh ON tk.ma_hang = hh.ma_hang
+    WHERE tk.ngay <= ?
+      AND NOT EXISTS (
+        SELECT 1
+        FROM the_kho tk2
+        WHERE tk2.ma_kho = tk.ma_kho
+          AND tk2.ma_hang = tk.ma_hang
+          AND tk2.ngay <= ?
+          AND (
+            tk2.ngay > tk.ngay
+            OR (tk2.ngay = tk.ngay AND tk2.ma_the_kho > tk.ma_the_kho)
+          )
+      )
+";
+
+$params_bieu_do_ton = [$chart1_ngay_ket_thuc, $chart1_ngay_ket_thuc];
+
+// Thêm điều kiện phân quyền vào đầu WHERE clause
+if (!empty($kho_condition)) {
+    $sql_bieu_do_ton_loai_kho .= " " . $kho_condition;
+    $params_bieu_do_ton = array_merge($params_bieu_do_ton, $kho_params);
+}
+
+if (!empty($chart1_ma_vung)) {
+    $sql_bieu_do_ton_loai_kho .= " AND k.ma_vung = ?";
+    $params_bieu_do_ton[] = $chart1_ma_vung;
+}
+
+if (!empty($chart1_loai_kho)) {
+    $sql_bieu_do_ton_loai_kho .= " AND k.ma_loai_kho = ?";
+    $params_bieu_do_ton[] = $chart1_loai_kho;
+}
+
+if (!empty($chart1_don_vi_tinh)) {
+    $sql_bieu_do_ton_loai_kho .= " AND hh.don_vi_tinh = ?";
+    $params_bieu_do_ton[] = $chart1_don_vi_tinh;
+}
+
+$sql_bieu_do_ton_loai_kho .= " GROUP BY lk.ten_loai_kho ORDER BY lk.ma_loai_kho";
+
+$stmt_bieu_do_ton = $pdo->prepare($sql_bieu_do_ton_loai_kho);
+$stmt_bieu_do_ton->execute($params_bieu_do_ton);
+$data_bieu_do_ton_temp = $stmt_bieu_do_ton->fetchAll(PDO::FETCH_ASSOC);
+
+// ============ GỘP DỮ LIỆU NHẬP / XUẤT / TỒN ============
 $data_bieu_do = [];
+
+// Khởi tạo theo danh sách loại kho để luôn có đủ label
+foreach ($danh_sach_loai_kho as $lk) {
+    $ten = $lk['ten_loai_kho'];
+    $data_bieu_do[$ten] = ['nhap' => 0, 'xuat' => 0, 'ton' => 0];
+}
+
 foreach ($data_bieu_do_loai_kho_temp as $row) {
     $key = $row['ten_loai_kho'];
     if (!isset($data_bieu_do[$key])) {
         $data_bieu_do[$key] = ['nhap' => 0, 'xuat' => 0, 'ton' => 0];
     }
     $data_bieu_do[$key]['nhap'] += (int)$row['tong_nhap'];
-    $data_bieu_do[$key]['xuat'] = 0;
+}
+
+foreach ($data_bieu_do_xuat_temp as $row) {
+    $key = $row['ten_loai_kho'];
+    if (!isset($data_bieu_do[$key])) {
+        $data_bieu_do[$key] = ['nhap' => 0, 'xuat' => 0, 'ton' => 0];
+    }
+    $data_bieu_do[$key]['xuat'] += (int)$row['tong_xuat'];
+}
+
+foreach ($data_bieu_do_ton_temp as $row) {
+    $key = $row['ten_loai_kho'];
+    if (!isset($data_bieu_do[$key])) {
+        $data_bieu_do[$key] = ['nhap' => 0, 'xuat' => 0, 'ton' => 0];
+    }
+    $data_bieu_do[$key]['ton'] += (int)$row['ton_cuoi_ky'];
 }
 ?>
 
@@ -159,6 +335,14 @@ foreach ($data_bieu_do_loai_kho_temp as $row) {
     .mb-3{
         font-weight: bold;
     }
+
+    .w-100:hover{
+        background-color: #1574c7;
+    }
+
+    .col-md-2 {
+        width: 14%;
+    }
     </style>
 </head>
 
@@ -174,7 +358,7 @@ foreach ($data_bieu_do_loai_kho_temp as $row) {
 
             <div class="report-title">
                 <h1>📈 BIỂU ĐỒ BIẾN ĐỘNG THEO LOẠI KHO</h1>
-                <p>Xem tổng lượng nhập theo loại kho trong khoảng thời gian được chọn</p>
+                <p>Xem tổng lượng nhập, xuất và tồn cuối kỳ theo loại kho trong khoảng thời gian được chọn</p>
             </div>
 
             <!-- Phần lọc dữ liệu -->
@@ -233,6 +417,12 @@ foreach ($data_bieu_do_loai_kho_temp as $row) {
                         <div>
                             <button type="submit" class="btn btn-primary w-100">Lọc dữ liệu</button>
                         </div>
+                    </div>
+                    <div class="col-md-2" style="margin-top: 51px; background-color: #0d6efd; border-radius: 5px; height: 36px;">
+                        <a href="xuat_excel_chart1_loai_kho.php?<?php echo http_build_query($_GET); ?>" 
+                        class="d-flex excel" style="color: #f9f9f9; text-decoration: none;  padding: 6px; justify-content: center; ">
+                            📥 Xuất Excel
+                        </a>
                     </div>
                 </form>
             </div>
