@@ -1,312 +1,175 @@
 <?php
 include '../include/connect.php';
-
 ?>
 
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="scroll-smooth">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Báo Cáo Kho</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-    .body {
-        font-family: "Inter", "sans-serif";
-    }
-
-    .container-main {
-        background-color: white;    
-        overflow: auto;
-    }
-
-    .report-title {
-        text-align: center;
-        color: #333;
-        margin-top: 20px;
-        margin-bottom: 40px;
-        border-bottom: 3px solid #202020;
-        padding-bottom: 20px;
-    }
-
-    .report-title h1 {
-        font-weight: bold;
-        font-size: 2.5em;
-        margin-bottom: 10px;
-        color: #202020;
-    }
-
-    .report-title p {
-        color: #666;
-        font-size: 1.1em;
-        margin: 5px 0;
-    }
-
-    .cards-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
-        margin: auto 15px;
-        max-width: 1400px;
-        padding: 0 10px;
-    }
-
-    .report-card {
-        background: white;
-        border-radius: 10px;
-        padding: 30px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        text-decoration: none;
-        color: inherit;
-        transition: all 0.3s ease;
-        border-top: 4px solid;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        min-height: 400px;
-        height: 100%;
-    }
-
-    .report-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        text-decoration: none;
-        color: inherit;
-    }
-
-    @media (max-width: 1200px) {
-        .cards-container {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    @media (max-width: 768px) {
-        .cards-container {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .report-card.card-chart1 {
-        border-top-color: #007bff;
-    }
-
-    .report-card.card-chart1 .card-icon {
-        color: #007bff;
-    }
-
-    .report-card.card-chart2 {
-        border-top-color: #007bff;
-    }
-
-    .report-card.card-chart2 .card-icon {
-        color: #007bff;
-    }
-
-    .report-card.card-table {
-        border-top-color: #007bff;
-    }
-
-    .report-card.card-table .card-icon {
-        color: #007bff;
-    }
-
-    .card-icon {
-        font-size: 3em;
-        margin-bottom: 15px;
-        display: block;
-        text-align: center;
-        min-height: 60px;
-    }
-
-    .card-title {
-        font-size: 1.5em;
-        font-weight: bold;
-        margin-bottom: 10px;
-        text-align: center;
-        min-height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .card-description {
-        color: #666;
-        font-size: 0.95em;
-        margin-bottom: 15px;
-        line-height: 1.5;
-        flex-grow: 0;
-    }
-
-    .card-features {
-        font-size: 0.85em;
-        color: #999;
-        flex-grow: 1;
-        margin-bottom: 15px;
-    }
-
-    .card-features ul {
-        margin: 5px 0 0 0;
-        padding-left: 20px;
-    }
-
-    .card-features li {
-        margin: 5px 0;
-    }
-
-    .btn-access {
-        display: inline-block;
-        margin-top: auto;
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border-radius: 5px;
-        text-decoration: none;
-        font-weight: bold;
-        transition: background-color 0.3s;
-        text-align: center;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .btn-access:hover {
-        background-color: #0056b3;
-        text-decoration: none;
-    }
-
-    .summary-section {
-        padding: 30px;
-        margin-top: 40px;
-    }
-
-    .summary-section h3 {
-        color: #333;
-        margin-bottom: 20px;
-        font-weight: bold;
-    }
-
-    .summary-text {
-        color: #666;
-        line-height: 1.8;
-        margin-bottom: 15px;
-    }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Nếu bạn đã có tailwind config riêng thì thay bằng link build css -->
+    <!-- <link href="/css/output.css" rel="stylesheet"> -->
+     
 </head>
 
-<body
-    class="bg-background-light dark:bg-background-dark font-display text-[#111418] dark:text-white min-h-screen min-h-0">
+<body class="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 antialiased flex flex-col" style="font-family: 'Inter', sans-serif;">
 
     <?php include '../include/sidebar.php'; ?>
-    <div class="flex-1 flex flex-col min-h-screen relative">
+
+    <div class="flex-1 flex flex-col">
+
         <?php include '../include/header.php'; ?>
-        <div class="container-main">
-            <div class="report-title">
-                <h1>📊 HỆ THỐNG BÁO CÁO KHO</h1>
-                <p>Lựa chọn báo cáo bạn muốn xem</p>
-                <p style="font-size: 0.9em; color: #999; margin-top: 15px;">
-                    Mỗi báo cáo có bộ lọc riêng độc lập
-                </p>
-            </div>
 
-            <!-- Các thẻ báo cáo -->
-            <div class="cards-container">
-                <!-- Card 1: Biểu đồ loại kho -->
-                <a href="baocao_chart1_loai_kho.php" class="report-card card-chart1">
-                    <span class="card-icon">📈</span>
-                    <div class="card-title">Biểu Đồ Loại Kho</div>
-                    <div class="card-description">
-                        Xem biểu đồ tổng lượng nhập theo từng loại kho
-                    </div>
-                    <div class="card-features">
-                        <strong>Bộ lọc:</strong>
-                        <ul>
-                            <li>Vùng miền</li>
-                            <li>Loại kho</li>
-                            <li>Đơn vị tính</li>
-                            <li>Khoảng thời gian</li>
-                        </ul>
-                    </div>
-                    <div class="btn-access">Xem báo cáo →</div>
-                </a>
+        <main class="flex-1 overflow-auto bg-white dark:bg-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-                <!-- Card 2: Biểu đồ hàng hóa -->
-                <a href="baocao_chart2_hang_hoa.php" class="report-card card-chart2">
-                    <span class="card-icon">📊</span>
-                    <div class="card-title">Biểu Đồ Hàng Hóa</div>
-                    <div class="card-description">
-                        Xem biến động nhập/xuất hàng hóa theo từng ngày
-                    </div>
-                    <div class="card-features">
-                        <strong>Bộ lọc:</strong>
-                        <ul>
-                            <li>Vùng miền</li>
-                            <li>Loại kho</li>
-                            <li>Hàng hóa</li>
-                            <li>Khoảng thời gian</li>
-                        </ul>
-                    </div>
-                    <div class="btn-access">Xem báo cáo →</div>
-                </a>
-
-                <!-- Card 3: Bảng cân đối -->
-                <a href="baocao_table_can_doi.php" class="report-card card-table">
-                    <span class="card-icon">📋</span>
-                    <div class="card-title">Bảng Cân Đối</div>
-                    <div class="card-description">
-                        Xem chi tiết tồn kho, nhập, xuất cho từng hàng hóa
-                    </div>
-                    <div class="card-features">
-                        <strong>Bộ lọc:</strong>
-                        <ul>
-                            <li>Vùng miền</li>
-                            <li>Loại kho</li>
-                            <li>Khoảng thời gian</li>
-                        </ul>
-                    </div>
-                    <div class="btn-access">Xem báo cáo →</div>
-                </a>
-
-                <!-- Card 4: Báo cáo tổng hợp -->
-                <a href="baocao_tong_hop.php" class="report-card card-table" style="border-top-color: #007bff;">
-                    <span class="card-icon" style="color: #007bff;">📑</span>
-                    <div class="card-title">Báo Cáo Tổng Hợp</div>
-                    <div class="card-description">
-                        Xuất Excel báo cáo tổng hợp 3 bảng: biến động kho, biến động hàng hóa, bảng cân đối
-                    </div>
-                    <div class="card-features">
-                        <strong>Bộ lọc:</strong>
-                        <ul>
-                            <li>Vùng miền</li>
-                            <li>Loại kho</li>
-                            <li>Đơn vị tính</li>
-                            <li>Khoảng thời gian</li>
-                        </ul>
-                    </div>
-                    <div class="btn-access" style="background-color: #007bff; margin-top: auto;">Xem báo cáo →</div>
-                </a>
-            </div>
-
-            <!-- Phần tóm tắt -->
-            <div class="summary-section">
-                <h3>ℹ️ Hướng dẫn sử dụng</h3>
-                <div class="summary-text">
-                    <strong>Biểu Đồ Loại Kho:</strong> Hiển thị tổng lượng hàng nhập vào mỗi loại kho.
-                    Sử dụng bộ lọc để phân tích theo vùng miền, loại kho hoặc đơn vị tính cụ thể.
+                <!-- Tiêu đề -->
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white tracking-tight">
+                        📊 HỆ THỐNG BÁO CÁO KHO
+                    </h1>
+                    <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
+                        Lựa chọn báo cáo bạn muốn xem
+                    </p>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-500">
+                        Mỗi báo cáo có bộ lọc riêng độc lập
+                    </p>
                 </div>
-                <div class="summary-text">
-                    <strong>Biểu Đồ Hàng Hóa:</strong> Hiển thị xu hướng nhập/xuất hàng hóa qua các ngày.
-                    Lọc theo vùng, loại kho hoặc hàng hóa cụ thể để theo dõi chi tiết.
+
+                <!-- Grid các thẻ báo cáo -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+                    <!-- Card 1 -->
+                    <a href="baocao_chart1_loai_kho.php"
+                       class="group bg-white dark:bg-gray-700 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-t-4 border-blue-600 flex flex-col h-full min-h-[420px]">
+
+                        <div class="pt-10 pb-6 text-center text-6xl text-blue-600">📈</div>
+                        <h2 class="px-6 text-2xl font-bold text-center text-gray-800 dark:text-gray-100 min-h-[60px] flex items-center justify-center">
+                            Biểu Đồ Loại Kho
+                        </h2>
+                        <p class="px-6 mt-3 text-gray-600 dark:text-gray-300 text-center text-sm">
+                            Xem biểu đồ tổng lượng nhập theo từng loại kho
+                        </p>
+                        <div class="px-6 mt-4 text-sm text-gray-500 dark:text-gray-400 flex-grow">
+                            <strong class="block mb-2">Bộ lọc:</strong>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Vùng miền</li>
+                                <li>Loại kho</li>
+                                <li>Đơn vị tính</li>
+                                <li>Khoảng thời gian</li>
+                            </ul>
+                        </div>
+                        <div class="px-6 pb-8 mt-6">
+                            <div class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-center transition-colors duration-200 group-hover:bg-blue-700">
+                                Xem báo cáo →
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Card 2 -->
+                    <a href="baocao_chart2_hang_hoa.php"
+                       class="group bg-white dark:bg-gray-700 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-t-4 border-blue-600 flex flex-col h-full min-h-[420px]">
+
+                        <div class="pt-10 pb-6 text-center text-6xl text-blue-600">📊</div>
+                        <h2 class="px-6 text-2xl font-bold text-center text-gray-800 dark:text-gray-100 min-h-[60px] flex items-center justify-center">
+                            Biểu Đồ Hàng Hóa
+                        </h2>
+                        <p class="px-6 mt-3 text-gray-600 dark:text-gray-300 text-center text-sm">
+                            Xem biến động nhập/xuất hàng hóa theo từng ngày
+                        </p>
+                        <div class="px-6 mt-4 text-sm text-gray-500 dark:text-gray-400 flex-grow">
+                            <strong class="block mb-2">Bộ lọc:</strong>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Vùng miền</li>
+                                <li>Loại kho</li>
+                                <li>Hàng hóa</li>
+                                <li>Khoảng thời gian</li>
+                            </ul>
+                        </div>
+                        <div class="px-6 pb-8 mt-6">
+                            <div class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-center transition-colors duration-200 group-hover:bg-blue-700">
+                                Xem báo cáo →
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Card 3 -->
+                    <a href="baocao_table_can_doi.php"
+                       class="group bg-white dark:bg-gray-700 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-t-4 border-blue-600 flex flex-col h-full min-h-[420px]">
+
+                        <div class="pt-10 pb-6 text-center text-6xl text-blue-600">📋</div>
+                        <h2 class="px-6 text-2xl font-bold text-center text-gray-800 dark:text-gray-100 min-h-[60px] flex items-center justify-center">
+                            Bảng Cân Đối
+                        </h2>
+                        <p class="px-6 mt-3 text-gray-600 dark:text-gray-300 text-center text-sm">
+                            Xem chi tiết tồn kho, nhập, xuất cho từng hàng hóa
+                        </p>
+                        <div class="px-6 mt-4 text-sm text-gray-500 dark:text-gray-400 flex-grow">
+                            <strong class="block mb-2">Bộ lọc:</strong>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Vùng miền</li>
+                                <li>Loại kho</li>
+                                <li>Khoảng thời gian</li>
+                            </ul>
+                        </div>
+                        <div class="px-6 pb-8 mt-6">
+                            <div class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-center transition-colors duration-200 group-hover:bg-blue-700">
+                                Xem báo cáo →
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Card 4 - Báo cáo tổng hợp -->
+                    <a href="baocao_tong_hop.php"
+                       class="group bg-white dark:bg-gray-700 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-t-4 border-blue-600 flex flex-col h-full min-h-[420px]">
+
+                        <div class="pt-10 pb-6 text-center text-6xl text-blue-600">📑</div>
+                        <h2 class="px-6 text-2xl font-bold text-center text-gray-800 dark:text-gray-100 min-h-[60px] flex items-center justify-center">
+                            Báo Cáo Tổng Hợp
+                        </h2>
+                        <p class="px-6 mt-3 text-gray-600 dark:text-gray-300 text-center text-sm">
+                            Xuất Excel báo cáo tổng hợp 3 bảng: biến động kho, biến động hàng hóa, bảng cân đối
+                        </p>
+                        <div class="px-6 mt-4 text-sm text-gray-500 dark:text-gray-400 flex-grow">
+                            <strong class="block mb-2">Bộ lọc:</strong>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Vùng miền</li>
+                                <li>Loại kho</li>
+                                <li>Đơn vị tính</li>
+                                <li>Khoảng thời gian</li>
+                            </ul>
+                        </div>
+                        <div class="px-6 pb-8 mt-6">
+                            <div class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-center transition-colors duration-200 group-hover:bg-blue-700">
+                                Xem báo cáo →
+                            </div>
+                        </div>
+                    </a>
+
                 </div>
-                <div class="summary-text">
-                    <strong>Bảng Cân Đối:</strong> Cung cấp chi tiết đầy đủ về tồn kho (tồn đầu kỳ, nhập, xuất, tồn cuối
-                    kỳ)
-                    cho mỗi hàng hóa trong kho.
-                </div>
+
+                <!-- Phần hướng dẫn -->
+                <section class="mt-16 bg-white dark:bg-gray-700 rounded-xl shadow-lg p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-3">
+                        ℹ️ Hướng dẫn sử dụng
+                    </h3>
+                    <div class="space-y-6 text-gray-600 dark:text-gray-300 leading-relaxed">
+                        <p><strong>Biểu Đồ Loại Kho:</strong> Hiển thị tổng lượng hàng nhập vào mỗi loại kho. Sử dụng bộ lọc để phân tích theo vùng miền, loại kho hoặc đơn vị tính cụ thể.</p>
+                        <p><strong>Biểu Đồ Hàng Hóa:</strong> Hiển thị xu hướng nhập/xuất hàng hóa qua các ngày. Lọc theo vùng, loại kho hoặc hàng hóa cụ thể để theo dõi chi tiết.</p>
+                        <p><strong>Bảng Cân Đối:</strong> Cung cấp chi tiết đầy đủ về tồn kho (tồn đầu kỳ, nhập, xuất, tồn cuối kỳ) cho mỗi hàng hóa trong kho.</p>
+                    </div>
+                </section>
+
             </div>
-        </div>
+        </main>
+
     </div>
-    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+    <!-- Nếu bạn vẫn muốn giữ bootstrap cho một số component thì để lại, còn không thì có thể bỏ -->
 
+</body>
 </html>

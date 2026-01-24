@@ -205,195 +205,152 @@ foreach ($danh_sach_ngay as &$data) {
 ?>
 
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="scroll-smooth">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biểu Đồ Hàng Hóa - Báo Cáo Kho</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Nếu đã build Tailwind → thay bằng: <link href="/css/output.css" rel="stylesheet"> -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
-    <style>
-    .body {
-        font-family: "Inter", "sans-serif";
-    }
-
-    .container-main {
-        background-color: white;
-        max-height: calc(100vh - 40px);
-        overflow-x: hidden; /* chặn cuộn ngang */
-        overflow-y: auto; 
-    }
-
-    .filter-section {
-        background-color: #f9f9f9;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        margin-left: 10px;
-        margin-right: 10px;
-    }
-
-    .chart-container {
-        position: relative;
-        height: 400px;
-        margin-bottom: 30px;
-        background: white;
-        padding: 15px;
-        border-radius: 5px;
-        border: 1px solid #ddd;
-        margin-left: 10px;
-        margin-right: 10px;
-    }
-
-    .report-title {
-        text-align: center;
-        color: #333;
-        margin-bottom: 30px;
-        border-bottom: 3px solid #0d6efd;
-        padding-bottom: 15px;
-    }
-
-    .report-title h1 {
-        font-weight: bold;
-        font-size: 24px;
-        margin-bottom: 10px;
-        color: #0d6efd;
-    }
-
-    .btn-back {
-        background-color: #0d6efd;
-        margin-bottom: 15px;
-        margin-top: 15px;
-        margin-left: 15px;
-        border: #f9f9f9;
-    }
-
-    .form-select {
-        border-radius: 5px !important;
-    }
-
-    .form-control{
-        border-radius: 5px !important;
-    }
-
-    .mb-3{
-        font-weight: bold;
-    }
-
-    .w-100{
-        background-color: #0d6efd;
-        color: #f9f9f9;
-        border: #000;
-    }
-
-    .w-100:hover{
-        background-color: #1574c7;
-        color: #f9f9f9;
-    }
-
-    .col-md-2 {
-        width: 14%;
-    }
-    </style>
 </head>
 
-<body
-    class="bg-background-light dark:bg-background-dark font-display text-[#111418] dark:text-white min-h-screen min-h-0">
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 transition-colors duration-200 h-screen flex flex-col overflow-hidden">
 
     <?php include '../include/sidebar.php'; ?>
-    <div class="flex-1 flex flex-col min-h-screen relative">
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+
         <?php include '../include/header.php'; ?>
-        <div class="container-main">
-            <a href="baocao_bancandoi.php" class="btn btn-secondary btn-back">
-                ← 
-            </a>
 
-            <div class="report-title">
-                <h1>📊 BIỂU ĐỒ BIẾN ĐỘNG THEO HÀNG HÓA</h1>
-                <p>Xem biến động nhập/xuất hàng hóa theo từng ngày</p>
-            </div>
+        <main class="flex-1 overflow-y-auto bg-white dark:bg-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
 
-            <!-- Phần lọc dữ liệu -->
-            <div class="filter-section">
-                <h5 class="mb-3">Bộ lọc biểu đồ</h5>
-                <form method="GET" class="row g-3" id="filterForm">
-                    <div class="col-md-2">
-                        <label for="chart2_ma_vung" class="form-label">Vùng miền</label>
-                        <select class="form-select" id="chart2_ma_vung" name="chart2_ma_vung">
-                            <option value="">-- Tất cả --</option>
-                            <?php foreach ($danh_sach_vung as $v): ?>
-                            <option value="<?php echo htmlspecialchars($v['ma_vung']); ?>"
-                                <?php echo $chart2_ma_vung == $v['ma_vung'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($v['ten_vung']); ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="chart2_loai_kho" class="form-label">Loại kho</label>
-                        <select class="form-select" id="chart2_loai_kho" name="chart2_loai_kho"
-                            onchange="updateHangHoaList()">
-                            <option value="">-- Tất cả --</option>
-                            <?php foreach ($danh_sach_loai_kho as $lk): ?>
-                            <option value="<?php echo htmlspecialchars($lk['ma_loai_kho']); ?>"
-                                <?php echo $chart2_loai_kho == $lk['ma_loai_kho'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($lk['ten_loai_kho']); ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="chart2_ma_hang" class="form-label">Hàng hóa</label>
-                        <select class="form-select" id="chart2_ma_hang" name="chart2_ma_hang">
-                            <option value="">-- Tất cả --</option>
-                            <?php foreach ($danh_sach_hang as $h): ?>
-                            <option value="<?php echo htmlspecialchars($h['ma_hang']); ?>"
-                                <?php echo $chart2_ma_hang == $h['ma_hang'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($h['ma_hang'] . ' - ' . $h['ten_hang']); ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="chart2_ngay_bat_dau" class="form-label">Từ ngày</label>
-                        <input type="date" class="form-control" id="chart2_ngay_bat_dau" name="chart2_ngay_bat_dau"
-                            value="<?php echo htmlspecialchars($chart2_ngay_bat_dau); ?>">
-                    </div>
-                    <div class="col-md-2">
-                        <label for="chart2_ngay_ket_thuc" class="form-label">Đến ngày</label>
-                        <input type="date" class="form-control" id="chart2_ngay_ket_thuc" name="chart2_ngay_ket_thuc"
-                            value="<?php echo htmlspecialchars($chart2_ngay_ket_thuc); ?>">
-                    </div>
-                    <div class="col-md-2" style="margin-top: 27px;">
-                        <label>&nbsp;</label>
+                <!-- Nút quay lại -->
+                <div class="mb-6">
+                    <a href="baocao_bancandoi.php"
+                       class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition-colors">
+                        ← Quay lại
+                    </a>
+                </div>
+
+                <!-- Tiêu đề -->
+                <div class="text-center mb-10">
+                    <h1 class="text-3xl md:text-4xl font-bold text-blue-500 dark:text-blue-400 tracking-tight">
+                        📊 BIỂU ĐỒ BIẾN ĐỘNG THEO HÀNG HÓA
+                    </h1>
+                    <p class="mt-3 text-lg text-gray-600 dark:text-gray-400">
+                        Xem biến động nhập/xuất hàng hóa theo từng ngày
+                    </p>
+                </div>
+
+                <!-- Bộ lọc -->
+                <div class="bg-gray-100 dark:bg-gray-700 rounded-xl shadow-md p-6 mb-10">
+                    <h3 class="text-xl font-semibold mb-5 text-gray-800 dark:text-gray-100">
+                        Bộ lọc biểu đồ
+                    </h3>
+
+                    <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4" id="filterForm">
+
+                        <!-- Vùng miền -->
                         <div>
-                            <button type="submit" class="btn btn-warning w-100">Lọc dữ liệu</button>
+                            <label for="chart2_ma_vung" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Vùng miền
+                            </label>
+                            <select name="chart2_ma_vung" id="chart2_ma_vung"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">-- Tất cả --</option>
+                                <?php foreach ($danh_sach_vung as $v): ?>
+                                    <option value="<?= htmlspecialchars($v['ma_vung']) ?>"
+                                        <?= $chart2_ma_vung === $v['ma_vung'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($v['ten_vung']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
-                    </div>
-                    <div class="col-md-2" style="margin-top: 51px; background-color: #0d6efd; border-radius: 5px; height: 36px;">
-                        <a href="xuat_excel_chart2_hang_hoa.php?<?php echo http_build_query($_GET); ?>" 
-                        class="d-flex excel" style="color: #f9f9f9; text-decoration: none;  padding: 6px; justify-content: center; ">
-                            📥 Xuất Excel
-                        </a>
-                    </div>
-                </form>
-                
-            </div>
 
-            <!-- Biểu đồ biến động theo ngày -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="chart-container">
+                        <!-- Loại kho -->
+                        <div>
+                            <label for="chart2_loai_kho" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Loại kho
+                            </label>
+                            <select name="chart2_loai_kho" id="chart2_loai_kho" onchange="updateHangHoaList()"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">-- Tất cả --</option>
+                                <?php foreach ($danh_sach_loai_kho as $lk): ?>
+                                    <option value="<?= htmlspecialchars($lk['ma_loai_kho']) ?>"
+                                        <?= $chart2_loai_kho === $lk['ma_loai_kho'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($lk['ten_loai_kho']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Hàng hóa -->
+                        <div>
+                            <label for="chart2_ma_hang" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Hàng hóa
+                            </label>
+                            <select name="chart2_ma_hang" id="chart2_ma_hang"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">-- Tất cả --</option>
+                                <?php foreach ($danh_sach_hang as $h): ?>
+                                    <option value="<?= htmlspecialchars($h['ma_hang']) ?>"
+                                        <?= $chart2_ma_hang === $h['ma_hang'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($h['ma_hang'] . ' - ' . $h['ten_hang']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Từ ngày -->
+                        <div>
+                            <label for="chart2_ngay_bat_dau" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Từ ngày
+                            </label>
+                            <input type="date" name="chart2_ngay_bat_dau" id="chart2_ngay_bat_dau"
+                                   value="<?= htmlspecialchars($chart2_ngay_bat_dau) ?>"
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+
+                        <!-- Đến ngày -->
+                        <div>
+                            <label for="chart2_ngay_ket_thuc" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Đến ngày
+                            </label>
+                            <input type="date" name="chart2_ngay_ket_thuc" id="chart2_ngay_ket_thuc"
+                                   value="<?= htmlspecialchars($chart2_ngay_ket_thuc) ?>"
+                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+
+                        <!-- Nút lọc + xuất excel -->
+                        <div class="flex flex-col justify-end gap-3 sm:flex-row sm:items-end lg:col-span-2 xl:col-span-1 xl:flex-col xl:items-stretch">
+                            <button type="submit"
+                                    class="px-6 py-2.5 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition-colors">
+                                Lọc dữ liệu
+                            </button>
+
+                            <a href="xuat_excel_chart2_hang_hoa.php?<?= http_build_query($_GET) ?>"
+                               class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow transition-colors text-center">
+                                📥 Xuất Excel
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- Khu vực biểu đồ -->
+                <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6">
+                    <div class="h-[450px] md:h-[500px]">
                         <canvas id="chartHangHoa"></canvas>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    </div>
 
+            </div>
+        </main>
+
+    </div>
 
     <script>
     // Mapping giữa loại kho và loại hàng
@@ -522,7 +479,5 @@ foreach ($danh_sach_ngay as &$data) {
     });
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

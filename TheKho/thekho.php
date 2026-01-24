@@ -242,10 +242,8 @@ if ($ma_hang_selected) {
 </head>
 <body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 transition-colors duration-200 h-screen flex flex-col overflow-hidden">
     <?php include '../include/sidebar.php'; ?>
-
     <div class="flex-1 flex flex-col overflow-hidden">
         <?php include '../include/header.php'; ?>
-
         <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-background-light dark:bg-background-dark">
             <!-- Header + bộ lọc -->
             <div class="px-6 py-5 border-b border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -214,11 +214,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
 
 <body
     class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 transition-colors duration-200">
-    <div class="flex h-screen overflow-hidden">
-        <aside
-            class="w-64 bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex-shrink-0 md:flex flex-col transition-colors duration-200">
-            <?php include '../include/sidebar.php'; ?>
-        </aside>
+        <?php include '../include/sidebar.php'; ?>
         <div class="flex-1 flex flex-col overflow-hidden">
             <?php include '../include/header.php'; ?>
             <main
@@ -497,7 +493,6 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                 </div>
             </div>
         </div>
-    </div>
     <!-- Edit User Modal -->
     <div id="editUserModal" class="hidden">
         <div aria-labelledby="edit-modal-title" aria-modal="true" class="fixed inset-0 z-50 overflow-y-auto"

@@ -109,171 +109,150 @@ if (!empty($loai_kho) && isset($mapping_loai_kho_hang[$loai_kho])) {
     $danh_sach_dvt = $stmt_dvt->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
+
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Báo Cáo Tổng Hợp - Báo Cáo Kho</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-    .body {
-        font-family: "Inter", "sans-serif";
-    }
-
-    .container-main {
-        background-color: white;
-        max-height: calc(100vh - 40px);
-        overflow-x: hidden;
-        overflow-y: auto; 
-    }
-
-    .filter-section {
-        background-color: #f9f9f9;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        margin-left: 10px;
-        margin-right: 10px;
-    }
-
-    .report-title {
-        text-align: center;
-        color: #333;
-        margin-bottom: 30px;
-        border-bottom: 3px solid #007bff;
-        padding-bottom: 15px;
-    }
-
-    .report-title h1 {
-        font-weight: bold;
-        margin-bottom: 10px;
-        font-size: 24px;
-        color: #007bff;
-    }
-
-    .btn-back {
-        background-color: #007bff;
-        margin-bottom: 15px;
-        margin-top: 15px;
-        margin-left: 15px;
-        border: #f9f9f9;
-    }
-
-    .form-select {
-        border-radius: 5px !important;
-    }
-
-    .form-control{
-        border-radius: 5px !important;
-    }
-
-    .mb-3{
-        font-weight: bold;
-    }
-
-    .btn-export {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 10px 30px;
-        font-size: 16px;
-        font-weight: bold;
-    }
-
-    .btn-export:hover {
-        background-color: #1c76bb;
-        color: white;
-    }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Nếu đã build Tailwind → thay bằng: <link href="/css/output.css" rel="stylesheet"> -->
 </head>
-<body class="bg-background-light dark:bg-background-dark font-display text-[#111418] dark:text-white min-h-screen min-h-0">
+
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 transition-colors duration-200 h-screen flex flex-col overflow-hidden">
+
     <?php include '../include/sidebar.php'; ?>
-    <div class="flex-1 flex flex-col min-h-screen relative">
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+
         <?php include '../include/header.php'; ?>
-        <div class="container-main">
-            <a href="baocao_bancandoi.php" class="btn btn-secondary btn-back">
-                ← 
-            </a>
 
-            <div class="report-title">
-                <h1>📑 BÁO CÁO TỔNG HỢP</h1>
-                <p>Xuất Excel báo cáo tổng hợp gồm 3 bảng: Biến động kho, Biến động hàng hóa, Bảng cân đối</p>
-            </div>
+        <main class="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-            <!-- Phần lọc dữ liệu -->
-            <div class="filter-section">
-                <h3 class="mb-3">Bộ lọc báo cáo</h3>
-                <form method="GET" action="xuat_excel_bao_cao_tong_hop.php" class="row g-3" id="filterForm">
-                    <div style="display: flex; align-items: center; justify-content: space-between;" >
-                        <div class="col-md-3">
-                            <label for="ma_vung" class="form-label">Vùng miền</label>
-                            <select class="form-select" id="ma_vung" name="ma_vung">
+                <!-- Nút quay lại -->
+                <div class="mb-6">
+                    <a href="baocao_bancandoi.php"
+                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors duration-200">
+                        ← Quay lại
+                    </a>
+                </div>
+
+                <!-- Tiêu đề -->
+                <div class="text-center mb-10">
+                    <h1 class="text-3xl sm:text-4xl font-bold text-blue-500 dark:text-blue-400 tracking-tight">
+                        📑 BÁO CÁO TỔNG HỢP
+                    </h1>
+                    <p class="mt-3 text-lg text-gray-600 dark:text-gray-400">
+                        Xuất Excel báo cáo tổng hợp 3 bảng: biến động kho, biến động hàng hóa, bảng cân đối
+                    </p>
+                </div>
+
+                <!-- Bộ lọc -->
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md p-6 mb-10 border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-semibold mb-6 text-gray-800 dark:text-gray-100">
+                        Bộ lọc báo cáo
+                    </h3>
+
+                    <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5" id="filterForm" action="xuat_excel_bao_cao_tong_hop.php">
+
+                        <!-- Vùng miền -->
+                        <div>
+                            <label for="ma_vung" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                Vùng miền
+                            </label>
+                            <select name="ma_vung" id="ma_vung"
+                                    class="w-full h-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:outline-none transition">
                                 <option value="">-- Tất cả --</option>
                                 <?php foreach ($danh_sach_vung as $v): ?>
-                                <option value="<?php echo htmlspecialchars($v['ma_vung']); ?>"
-                                    <?php echo $ma_vung == $v['ma_vung'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($v['ten_vung']); ?>
-                                </option>
+                                    <option value="<?= htmlspecialchars($v['ma_vung']) ?>"
+                                        <?= $ma_vung == $v['ma_vung'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($v['ten_vung']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label for="loai_kho" class="form-label">Loại kho</label>
-                            <select class="form-select" id="loai_kho" name="loai_kho" onchange="updateDVTList()">
+
+                        <!-- Loại kho -->
+                        <div>
+                            <label for="loai_kho" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                Loại kho
+                            </label>
+                            <select name="loai_kho" id="loai_kho" onchange="updateDVTList()"
+                                    class="w-full h-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:outline-none transition">
                                 <option value="">-- Tất cả --</option>
                                 <?php foreach ($danh_sach_loai_kho as $lk): ?>
-                                <option value="<?php echo htmlspecialchars($lk['ma_loai_kho']); ?>"
-                                    <?php echo $loai_kho == $lk['ma_loai_kho'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($lk['ten_loai_kho']); ?>
-                                </option>
+                                    <option value="<?= htmlspecialchars($lk['ma_loai_kho']) ?>"
+                                        <?= $loai_kho == $lk['ma_loai_kho'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($lk['ten_loai_kho']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label for="don_vi_tinh" class="form-label">Đơn vị tính</label>
-                            <select class="form-select" id="don_vi_tinh" name="don_vi_tinh">
+
+                        <!-- Đơn vị tính -->
+                        <div>
+                            <label for="don_vi_tinh" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                Đơn vị tính
+                            </label>
+                            <select name="don_vi_tinh" id="don_vi_tinh"
+                                    class="w-full h-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:outline-none transition">
                                 <option value="">-- Tất cả --</option>
                                 <?php foreach ($danh_sach_dvt as $dvt): ?>
-                                <option value="<?php echo htmlspecialchars($dvt['don_vi_tinh']); ?>"
-                                    <?php echo $don_vi_tinh == $dvt['don_vi_tinh'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($dvt['don_vi_tinh']); ?>
-                                </option>
+                                    <option value="<?= htmlspecialchars($dvt['don_vi_tinh']) ?>"
+                                        <?= $don_vi_tinh == $dvt['don_vi_tinh'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($dvt['don_vi_tinh']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 150px;">
-                        <div class="col-md-3">
-                            <label for="ngay_bat_dau" class="form-label">Từ ngày</label>
-                            <input type="date" class="form-control" id="ngay_bat_dau" name="ngay_bat_dau"
-                                value="<?php echo htmlspecialchars($ngay_bat_dau); ?>">
+
+                        <!-- Từ ngày -->
+                        <div>
+                            <label for="ngay_bat_dau" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                Từ ngày
+                            </label>
+                            <input type="date" name="ngay_bat_dau" id="ngay_bat_dau"
+                                   value="<?= htmlspecialchars($ngay_bat_dau) ?>"
+                                   class="w-full h-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:outline-none transition">
                         </div>
-                        <div class="col-md-3">
-                            <label for="ngay_ket_thuc" class="form-label">Đến ngày</label>
-                            <input type="date" class="form-control" id="ngay_ket_thuc" name="ngay_ket_thuc"
-                                value="<?php echo htmlspecialchars($ngay_ket_thuc); ?>">
+
+                        <!-- Đến ngày -->
+                        <div>
+                            <label for="ngay_ket_thuc" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                                Đến ngày
+                            </label>
+                            <input type="date" name="ngay_ket_thuc" id="ngay_ket_thuc"
+                                   value="<?= htmlspecialchars($ngay_ket_thuc) ?>"
+                                   class="w-full h-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:outline-none transition">
                         </div>
-                        <div class="col-md-12" style=" margin-top: 30px;">
-                            <button type="submit" class="btn btn-export">
+
+                        <!-- Nút xuất -->
+                        <div class="flex items-end gap-4 sm:gap-3 xl:flex-col xl:items-stretch xl:gap-3">
+                            <button type="submit"
+                                    class="flex-1 h-10 px-4 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors duration-200">
                                 📥 Xuất Excel Báo Cáo Tổng Hợp
                             </button>
                         </div>
-                    </div>
-                </form>
-            </div>
 
-            <div class="filter-section">
-                <h5>📋 Nội dung báo cáo tổng hợp:</h5>
-                <ul>
-                    <li><strong>Bảng 1:</strong> Biến động kho - Tình hình nhập xuất theo ngày theo đơn vị tính</li>
-                    <li><strong>Bảng 2:</strong> Biến động hàng hóa của loại kho - Tình hình nhập xuất, tồn đầu, tồn cuối</li>
-                    <li><strong>Bảng 3:</strong> Bảng cân đối kho - Tổng hợp theo loại kho và đơn vị tính</li>
-                </ul>
+                    </form>
+                </div>
+
+                <!-- Nội dung báo cáo tổng hợp -->
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700">
+                    <h5 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">📋 Nội dung báo cáo tổng hợp:</h5>
+                    <ul class="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                        <li><strong>Bảng 1:</strong> Biến động kho - Tình hình nhập xuất theo ngày theo đơn vị tính</li>
+                        <li><strong>Bảng 2:</strong> Biến động hàng hóa của loại kho - Tình hình nhập xuất, tồn đầu, tồn cuối</li>
+                        <li><strong>Bảng 3:</strong> Bảng cân đối kho - Tổng hợp theo loại kho và đơn vị tính</li>
+                    </ul>
+                </div>
+
             </div>
-        </div>
-    </div>
+        </main>
+
     </div>
 
     <script>
@@ -331,6 +310,5 @@ if (!empty($loai_kho) && isset($mapping_loai_kho_hang[$loai_kho])) {
     }
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
