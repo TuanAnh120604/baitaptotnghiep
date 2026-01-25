@@ -189,6 +189,7 @@ $sql_bang2 = "
             AND pn.ma_kho = k.ma_kho
             AND pn.ngay_nhap >= ? 
             AND pn.ngay_nhap <= ?
+                AND pn.trang_thai = 'da_xac_nhan'
         ), 0) as luong_nhap,
         COALESCE((
             SELECT SUM(ct.so_luong_xuat) 
@@ -198,6 +199,7 @@ $sql_bang2 = "
             AND px.ma_kho = k.ma_kho
             AND px.ngay_xuat >= ? 
             AND px.ngay_xuat <= ?
+                AND px.trang_thai = 'da_xac_nhan'
         ), 0) as luong_xuat
     FROM (
         SELECT DISTINCT ma_hang, ma_kho FROM the_kho
@@ -266,6 +268,7 @@ $sql_bang3 = "
             AND pn.ma_kho = k.ma_kho
             AND pn.ngay_nhap >= ? 
             AND pn.ngay_nhap <= ?
+                AND pn.trang_thai = 'da_xac_nhan'
         ), 0) as luong_nhap,
         COALESCE((
             SELECT SUM(ct.so_luong_xuat) 
@@ -275,6 +278,7 @@ $sql_bang3 = "
             AND px.ma_kho = k.ma_kho
             AND px.ngay_xuat >= ? 
             AND px.ngay_xuat <= ?
+                AND px.trang_thai = 'da_xac_nhan'
         ), 0) as luong_xuat
     FROM (
         SELECT DISTINCT ma_hang, ma_kho FROM the_kho
