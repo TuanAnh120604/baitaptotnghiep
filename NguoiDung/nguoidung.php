@@ -62,10 +62,19 @@ try {
     $count_result = $count_stmt->fetch(PDO::FETCH_ASSOC);
     $total_records = $count_result['total'];
 
-    // Query lấy dữ liệu
-    $data_query = "SELECT nd.ma_nd, nd.ten_nd, nd.mat_khau, nd.ma_vai_tro, vt.ten_vai_tro
+    // Query lấy dữ liệu với thông tin nơi làm việc
+    $data_query = "SELECT nd.ma_nd, nd.ten_nd, nd.mat_khau, nd.ma_vai_tro, vt.ten_vai_tro,
+                          CASE
+                              WHEN nd.ma_vai_tro = 'VT003' THEN CONCAT(COALESCE(lk.ten_loai_kho, ''), ' - ', COALESCE(vm.ten_vung, ''))
+                              WHEN nd.ma_vai_tro = 'VT004' THEN COALESCE(k.ten_kho, 'Chưa xác định')
+                              ELSE ''
+                          END as noi_lam_viec
                    FROM nguoi_dung nd
                    LEFT JOIN vai_tro vt ON nd.ma_vai_tro = vt.ma_vai_tro
+                   LEFT JOIN phan_quyen pq ON nd.ma_nd = pq.ma_nd
+                   LEFT JOIN loai_kho lk ON pq.ma_loai_kho = lk.ma_loai_kho
+                   LEFT JOIN vung_mien vm ON pq.ma_vung = vm.ma_vung
+                   LEFT JOIN kho k ON nd.ma_nd = k.ma_nd
                    WHERE 1=1";
 
     if (!empty($search)) {
@@ -281,6 +290,8 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                         dùng</th>
                                     <th class="px-6 py-4 border-b border-border-light dark:border-border-dark">Vai trò
                                     </th>
+                                    <th class="px-6 py-4 border-b border-border-light dark:border-border-dark">Nơi làm việc
+                                    </th>
                                     <th
                                         class="px-6 py-4 text-right border-b border-border-light dark:border-border-dark">
                                         Thao tác</th>
@@ -305,7 +316,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                             <?php if ($total_pages > 1): ?>
                                 <div id="paginationContainer" class="flex items-center gap-1">
                                     <!-- Nút Previous -->
-                                    <button id="prevBtn" onclick="changePage('prev')"
+                                    <button id="prevBtn" onclick="changePage(event, 'prev')" type="button"
                                         class="h-8 w-8 flex items-center justify-center rounded-lg text-[#637588] hover:bg-gray-100 dark:hover:bg-[#243447]">
                                         <span class="material-symbols-outlined text-[20px]">chevron_left</span>
                                     </button>
@@ -321,7 +332,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                     }
 
                                     if ($start_page > 1): ?>
-                                        <button onclick="changePage(1)"
+                                        <button onclick="changePage(event, 1)" type="button"
                                             class="h-8 w-8 flex items-center justify-center rounded-lg text-[#637588] dark:text-[#9ca3af] hover:bg-gray-100 dark:hover:bg-[#243447] text-sm font-medium">
                                             1
                                         </button>
@@ -332,7 +343,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                     <?php endif; ?>
 
                                     <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                                        <button onclick="changePage(<?= $i ?>)" data-page="<?= $i ?>"
+                                        <button onclick="changePage(event, <?= $i ?>)" data-page="<?= $i ?>" type="button"
                                             class="pagination-btn h-8 w-8 flex items-center justify-center rounded-lg <?= $i == $current_page ? 'bg-primary text-white' : 'text-[#637588] dark:text-[#9ca3af] hover:bg-gray-100 dark:hover:bg-[#243447]' ?> text-sm font-medium">
                                             <?= $i ?>
                                         </button>
@@ -343,14 +354,14 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                             <span
                                                 class="h-8 w-8 flex items-center justify-center text-[#637588] dark:text-[#9ca3af]">...</span>
                                         <?php endif; ?>
-                                        <button onclick="changePage(<?= $total_pages ?>)"
+                                        <button onclick="changePage(event, <?= $total_pages ?>)" type="button"
                                             class="h-8 w-8 flex items-center justify-center rounded-lg text-[#637588] dark:text-[#9ca3af] hover:bg-gray-100 dark:hover:bg-[#243447] text-sm font-medium">
                                             <?= $total_pages ?>
                                         </button>
                                     <?php endif; ?>
 
                                     <!-- Nút Next -->
-                                    <button id="nextBtn" onclick="changePage('next')"
+                                    <button id="nextBtn" onclick="changePage(event, 'next')" type="button"
                                         class="h-8 w-8 flex items-center justify-center rounded-lg text-[#637588] hover:bg-gray-100 dark:hover:bg-[#243447]">
                                         <span class="material-symbols-outlined text-[20px]">chevron_right</span>
                                     </button>
@@ -716,7 +727,8 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
         let currentPageNum = 1;
         let searchTimeout;
 
-        function changePage(page) {
+        function changePage(event, page) {
+            if (event) event.preventDefault();
             const totalPages = Math.ceil(filteredData.length / recordsPerPage);
             if (page === 'prev') page = currentPageNum - 1;
             else if (page === 'next') page = currentPageNum + 1;
@@ -815,13 +827,14 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
 
             // Render các hàng dữ liệu
             if (pageData.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">Không có dữ liệu người dùng</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">Không có dữ liệu người dùng</td></tr>';
             } else {
                 tableBody.innerHTML = pageData.map(user => {
                     const badgeClass = getBadgeClass(user.ma_vai_tro || '');
                     const tenVaiTro = escapeHtml(user.ten_vai_tro || 'Chưa xác định');
                     const maNd = escapeHtml(user.ma_nd || '');
                     const tenNd = escapeHtml(user.ten_nd || '');
+                    const noiLamViec = escapeHtml(user.noi_lam_viec || '');
                     const tenNdEscaped = tenNd.replace(/'/g, "\\'");
                     const maVaiTro = escapeHtml(user.ma_vai_tro || '');
 
@@ -840,6 +853,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                         <td class="px-6 py-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeClass}">${tenVaiTro}</span>
                         </td>
+                        <td class="px-6 py-4 text-slate-600 dark:text-slate-300">${noiLamViec}</td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex items-center justify-end space-x-2">${actionButtons}</div>
                         </td>

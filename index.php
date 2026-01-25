@@ -1,7 +1,11 @@
 <?php
-session_start();
 include './include/connect.php';
 include './include/permissions.php';
+
+if (!isset($_SESSION['role']) || empty($_SESSION['role'])) {
+    header('Location: /baitaptotnghiep-main/dn/login.php');
+    exit;
+}
 
 // Kiểm tra quyền
 if (!canView('baocao') && !canView('thongke')) {
