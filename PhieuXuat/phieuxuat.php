@@ -175,44 +175,62 @@ function getDVNhan($row)
                     <?php endif; ?>
                 </div>
             </div>
-            <form method="get"
-                class="bg-white dark:bg-[#1a2332] p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-10">
-                    <div class="md:col-span-4 lg:col-span-5 relative">
-                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Tìm
-                            kiếm</label>
-                        <div class="relative">
-                            <span
-                                class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined text-[20px]">search</span>
-                            <input
-                                id="searchInput"
-                                name="q"
-                                value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"
-                                class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 dark:text-white"
-                                placeholder="Mã phiếu, người nhận, kho xuất, đại lý..."
-                                type="text" />
+
+            <div
+                class="bg-white dark:bg-[#1a2332] p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between gap-4">
+
+                <form method="get">
+                    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+
+                        <!-- BÊN TRÁI: Search + Date -->
+                        <div class="flex flex-col md:flex-row gap-6 w-full">
+
+                            <!-- Tìm kiếm -->
+                            <div class="w-full md:w-80 lg:w-96 relative">
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                                    Tìm kiếm
+                                </label>
+                                <div class="relative">
+                                    <span
+                                        class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined text-[20px]">
+                                        search
+                                    </span>
+                                    <input
+                                        id="searchInput"
+                                        name="q"
+                                        value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"
+                                        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 dark:text-white"
+                                        placeholder="Người giao, đơn vị giao, nhà cung cấp...">
+                                </div>
+                            </div>
+
+                            <!-- Thời gian xuất -->
+                            <div class="w-full md:w-48">
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                                    Thời gian xuất
+                                </label>
+                                <input
+                                    type="date"
+                                    name="ngay"
+                                    value="<?= htmlspecialchars($_GET['ngay'] ?? '') ?>"
+                                    onchange="this.form.submit()"
+                                    class="w-full rounded-lg border-gray-300 bg-gray-50 py-2.5 px-4 text-sm text-gray-900 focus:border-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                            </div>
 
                         </div>
-                    </div>
-                    <div class="md:col-span-3 lg:col-span-2">
-                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Thời gian
-                            xuất</label>
-                        <input
-                            name="ngay"
-                            value="<?= htmlspecialchars($_GET['ngay'] ?? '') ?>"
-                            onchange="this.form.submit()"
-                            class="rounded-lg border-gray-300 bg-gray-50 py-2.5 px-4 text-sm text-gray-900 focus:border-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            type="date" />
+
+                        <!-- BÊN PHẢI: Nút làm mới -->
+                        <div class="w-full flex justify-end">
+                            <a href="<?= strtok($_SERVER['REQUEST_URI'], '?') ?>"
+                                class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary transition-colors">
+                                <span class="material-symbols-outlined text-lg">refresh</span>
+                                Làm mới
+                            </a>
+                        </div>
 
                     </div>
-                    <div class="md:col-span-2 lg:col-span-2 flex items-end">
-                        <a href="<?= strtok($_SERVER['REQUEST_URI'], '?') ?>"
-                            class="w-full h-[42px] inline-flex items-center justify-center px-4 py-1 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary transition-colors">
-                            Làm mới
-                        </a>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
 
             <?php if (!empty($error_message)): ?>
                 <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">

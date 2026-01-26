@@ -17,15 +17,24 @@ try {
     $vung_mien_stmt = $pdo->query("SELECT ma_vung, ten_vung FROM vung_mien ORDER BY ten_vung");
     $vung_mien_list = $vung_mien_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Lấy danh sách kho
-    $kho_stmt = $pdo->query("SELECT ma_kho, ten_kho, dia_chi FROM kho ORDER BY ten_kho");
-    $kho_list = $kho_stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Lấy danh sách kho (tách: tất cả kho và kho chưa có thủ kho)
+    $kho_stmt = $pdo->query("SELECT ma_kho, ten_kho, dia_chi, ma_nd FROM kho ORDER BY ten_kho");
+    $kho_all_list = $kho_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $kho_available_list = [];
+    foreach ($kho_all_list as $k) {
+        // Kho chưa gán thủ kho (ma_nd NULL hoặc rỗng)
+        if (empty($k['ma_nd'])) {
+            $kho_available_list[] = $k;
+        }
+    }
 } catch (Exception $e) {
     // Xử lý lỗi nếu cần
     $vai_tro_list = [];
     $loai_kho_list = [];
     $vung_mien_list = [];
-    $kho_list = [];
+    $kho_all_list = [];
+    $kho_available_list = [];
 }
 
 // Phân trang và lọc dữ liệu
@@ -393,7 +402,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                         id="modal-title">
                                         Thêm người dùng mới
                                     </h3>
-                                    <form id="addUserForm" method="POST" action="update_nguoidung.php"
+                                    <form id="addUserForm" method="POST" action="add_nguoidung.php"
                                         class="mt-4 space-y-4">
                                         <input type="hidden" name="action" value="add_user">
                                         <div>
@@ -474,7 +483,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                                         class="w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-primary focus:ring-primary dark:bg-slate-700 dark:text-white sm:text-sm px-3 py-2"
                                                         id="ma_kho" name="ma_kho">
                                                         <option value="">Chọn kho</option>
-                                                        <?php foreach ($kho_list as $kho): ?>
+                                                        <?php foreach ($kho_available_list as $kho): ?>
                                                             <option value="<?php echo htmlspecialchars($kho['ma_kho']); ?>">
                                                                 <?php echo htmlspecialchars($kho['ten_kho'] . ' - ' . $kho['dia_chi']); ?>
                                                             </option>
@@ -484,7 +493,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                             </div>
                                         </div>
                                         <div
-                                            class="bg-gray-50 dark:bg-slate-800/50 py-3  flex flex-col sm:flex-row sm:flex-row-reverse border-t border-border-light dark:border-border-dark gap-2 sm:gap-0">
+                                            class="py-3  flex flex-col sm:flex-row sm:flex-row-reverse border-t border-border-light dark:border-border-dark gap-2 sm:gap-0">
                                             <button
                                                 class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary order-2 sm:order-1 sm:ml-3 sm:w-auto sm:text-sm"
                                                 type="submit" form="addUserForm" id="saveUserBtn">
@@ -628,7 +637,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                     <select name="ma_kho"
                                         class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-surface-dark">
                                         <option value="">Chọn kho</option>
-                                        <?php foreach ($kho_list as $k): ?>
+                                        <?php foreach ($kho_all_list as $k): ?>
                                             <option value="<?= $k['ma_kho'] ?>">
                                                 <?= htmlspecialchars($k['ten_kho']) ?>
                                             </option>
@@ -683,7 +692,7 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                             </div>
                         </div>
                     </div>
-                    <form id="deleteUserForm" method="POST" action="update_nguoidung.php">
+                    <form id="deleteUserForm" method="POST" action="delete_nguoidung.php">
                         <input type="hidden" name="action" value="delete_user">
                         <input type="hidden" name="ma_nd" id="delete_ma_nd">
                         <div
@@ -727,6 +736,38 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
         let currentPageNum = 1;
         let searchTimeout;
 
+        function getActiveRole() {
+            return document.querySelector('.filter-btn.filter-btn-active')?.dataset.role || 'all';
+        }
+
+        function syncUrlParams({ page, role, search }, { reload = false, replace = true } = {}) {
+            const params = new URLSearchParams(window.location.search);
+
+            if (page != null) params.set('page', String(page));
+
+            if (role != null) {
+                if (role === 'all') params.delete('role');
+                else params.set('role', String(role));
+            }
+
+            if (search != null) {
+                const s = String(search).trim();
+                if (s === '') params.delete('search');
+                else params.set('search', s);
+            }
+
+            const query = params.toString();
+            const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+
+            if (reload) {
+                window.location.href = newUrl;
+                return;
+            }
+
+            if (replace) history.replaceState(null, '', newUrl);
+            else history.pushState(null, '', newUrl);
+        }
+
         function changePage(event, page) {
             if (event) event.preventDefault();
             const totalPages = Math.ceil(filteredData.length / recordsPerPage);
@@ -768,7 +809,13 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
         // Hàm lọc và phân trang bảng
         function filterAndRenderTable() {
             const selectedRole = document.querySelector('.filter-btn.filter-btn-active')?.dataset.role || 'all';
-            const searchText = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const searchTextRaw = searchInput ? searchInput.value.trim() : '';
+            const searchText = searchTextRaw.toLowerCase();
+
+            // Reset về trang 1 khi thay đổi filter/search + đồng bộ URL (không reload)
+            currentPageNum = 1;
+            syncUrlParams({ page: 1, role: selectedRole, search: searchTextRaw }, { reload: false, replace: true });
+
 
             // Lọc dữ liệu
             filteredData = allUsersData.filter(user => {
@@ -822,6 +869,17 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
         // Hàm render bảng dựa trên trang hiện tại
         function renderTable() {
             const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+
+            // Clamp currentPageNum hợp lệ (tránh URL page vượt quá totalPages)
+            if (totalPages <= 0) {
+                currentPageNum = 1;
+            } else if (currentPageNum > totalPages) {
+                currentPageNum = totalPages;
+                syncUrlParams({ page: currentPageNum }, { reload: false, replace: true });
+            } else if (currentPageNum < 1) {
+                currentPageNum = 1;
+                syncUrlParams({ page: 1 }, { reload: false, replace: true });
+            }
             const offset = (currentPageNum - 1) * recordsPerPage;
             const pageData = filteredData.slice(offset, offset + recordsPerPage);
 
@@ -865,13 +923,20 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
             // Cập nhật pagination info
             const startRecord = filteredData.length > 0 ? (currentPageNum - 1) * recordsPerPage + 1 : 0;
             const endRecord = Math.min(currentPageNum * recordsPerPage, filteredData.length);
-            document.getElementById('resultCount').textContent = `Hiển thị ${startRecord}-${endRecord} trên ${filteredData.length} người dùng`;
 
-            // Disable/enable prev/next buttons
-            document.getElementById('prevBtn').disabled = currentPageNum <= 1;
-            document.getElementById('nextBtn').disabled = currentPageNum >= totalPages;
+            const resultCountEl = document.getElementById('resultCount');
+            if (resultCountEl) {
+                resultCountEl.textContent = `Hiển thị ${startRecord}-${endRecord} trên ${filteredData.length} người dùng`;
+            }
 
-            // Cập nhật nút phân trang
+            // Disable/enable prev/next buttons (có thể không tồn tại nếu chỉ có 1 trang)
+            const prevBtnEl = document.getElementById('prevBtn');
+            if (prevBtnEl) prevBtnEl.disabled = currentPageNum <= 1;
+
+            const nextBtnEl = document.getElementById('nextBtn');
+            if (nextBtnEl) nextBtnEl.disabled = currentPageNum >= totalPages;
+
+            // Cập nhật nút phân trang (nếu có)
             updatePaginationButtons(totalPages);
         }
 
@@ -885,6 +950,13 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                 btn.classList.remove('bg-primary', 'text-white', 'cursor-not-allowed', 'text-slate-500', 'dark:text-slate-400');
                 btn.classList.add('border', 'border-border-light', 'dark:border-border-dark', 'text-slate-600', 'dark:text-slate-300');
                 btn.disabled = false;
+
+                // Disable nút trang vượt quá totalPages (khi đang lọc client-side)
+                if (page > totalPages) {
+                    btn.disabled = true;
+                    btn.classList.add('cursor-not-allowed', 'text-slate-400', 'dark:text-slate-500');
+                    return;
+                }
 
                 if (page === currentPageNum) {
                     btn.classList.remove('border', 'border-border-light', 'dark:border-border-dark', 'text-slate-600', 'dark:text-slate-300');

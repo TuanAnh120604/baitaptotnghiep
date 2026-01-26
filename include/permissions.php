@@ -30,7 +30,17 @@ $permissions = [
 
     ],
     'Ban giám đốc' => [
-        '*' => ['view']
+        'thongke' => ['view'],
+        'loaikho' => ['view'],
+        'donvitinh' => ['view'],
+        'danhsachkho' => ['view'],
+        'phieunhap' => ['view'],
+        'phieuxuat' => ['view'],
+        'vattu' => ['view'],
+        'thanhpham' => ['view'],
+        'daily' => ['view'],
+        'nhacungcap' => ['view'],
+        'caidat' => ['view'],
     ],
     'Admin' => [
         '*' => ['view', 'create', 'edit', 'delete']

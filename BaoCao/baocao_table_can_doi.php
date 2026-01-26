@@ -310,10 +310,10 @@ $ket_qua = $stmt_bang->fetchAll(PDO::FETCH_ASSOC);
                                     <th style="width: 10%;" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Đơn vị tính</th>
                                     <th style="width: 10%;" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Loại kho</th>
                                     <th style="width: 12%;" class="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Tên kho</th>
-                                    <th style="width: 10%;" class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Tồn đầu kỳ</th>
+                                    <th style="width: 10%;" class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Tồn đầu</th>
                                     <th style="width: 10%;" class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Lượng nhập</th>
                                     <th style="width: 10%;" class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Lượng xuất</th>
-                                    <th style="width: 10%;" class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Tồn cuối kỳ</th>
+                                    <th style="width: 10%;" class="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Tồn cuối</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
