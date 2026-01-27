@@ -41,6 +41,7 @@ $permissions = [
         'daily' => ['view'],
         'nhacungcap' => ['view'],
         'caidat' => ['view'],
+        'nguoidung' => ['view'],
     ],
     'Admin' => [
         '*' => ['view', 'create', 'edit', 'delete']
