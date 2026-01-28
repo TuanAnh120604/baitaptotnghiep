@@ -172,7 +172,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // cap_nhat_the_kho_theo_phieu($pdo, $ma_kho, $ds_ma_hang);
 
             $success_message = 'Thêm phiếu nhập thành công! Phiếu đang chờ thủ kho xác nhận.';
-            header("refresh:2;url=phieunhap.php");
+            header("Location: phieunhap.php?highlight=" . urlencode($ma_phieu_nhap));
+            exit;
         } catch (Exception $e) {
             // $pdo->rollBack();
             $error_message = 'Lỗi: ' . $e->getMessage();
@@ -316,10 +317,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </select>
                             </div>
 
-                            <div>
+                             <div>
                                 <label class="block text-sm font-medium mb-2">Đơn vị giao</label>
                                 <input type="text" name="don_vi_giao" class="w-full px-4 py-2.5 border rounded-lg bg-background-light dark:bg-gray-800 focus:ring-2 focus:ring-primary" placeholder="VD: Phòng sản xuất" />
                             </div>
+
 
                             <div>
                                 <label class="block text-sm font-medium mb-2">Loại kho <span class="text-red-500">*</span></label>
@@ -394,6 +396,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </button>
                         </div>
                     </form>
+                </div>
+
+                <!-- Modal cảnh báo mức dự trữ -->
+                <div id="warningModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div class="w-full max-w-md bg-white dark:bg-surface-dark rounded-xl shadow-2xl">
+                        <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-yellow-600">warning</span>
+                                Cảnh báo mức dự trữ
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <div id="warningContent" class="space-y-4">
+                                <!-- Nội dung cảnh báo sẽ được thêm bằng JS -->
+                            </div>
+                            <div class="flex justify-end gap-3 mt-6">
+                                <button onclick="cancelImport()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    Hủy
+                                </button>
+                                <button onclick="proceedImport()" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors">
+                                    Tiếp tục nhập
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -595,9 +622,143 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById('tongTien').textContent = tong.toLocaleString('vi-VN') + ' đ';
         }
 
+        // Kiểm tra mức dự trữ max trước khi submit
+        function setupFormValidation() {
+            const phieuNhapForm = document.getElementById('phieuNhapForm');
+            if (!phieuNhapForm) {
+                console.error('Không tìm thấy form phieuNhapForm');
+                return;
+            }
+
+            phieuNhapForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const form = e.target;
+                const maKho = document.getElementById('ma_kho').value;
+
+                console.log('Form submit, ma_kho:', maKho);
+
+                // Nếu không chọn kho, không kiểm tra
+                if (!maKho) {
+                    console.warn('Chưa chọn kho');
+                    form.submit();
+                    return;
+                }
+
+                const warnings = [];
+
+                // Kiểm tra từng hàng
+                const rows = document.querySelectorAll('#chiTietTable tbody tr');
+                console.log('Số hàng kiểm tra:', rows.length);
+
+                for (const row of rows) {
+                    const select = row.querySelector('select[name$="[ma_hang]"]');
+                    const soLuongInput = row.querySelector('input[name$="[so_luong]"]');
+
+                    if (!select || !soLuongInput) continue;
+
+                    const maHang = select.value;
+                    const soLuong = parseInt(soLuongInput.value) || 0;
+
+                    if (!maHang || soLuong <= 0) continue;
+
+                    console.log('Kiểm tra:', maHang, soLuong);
+
+                    try {
+                        // Kiểm tra mức dự trữ qua AJAX
+                        const response = await fetch('kiem_tra_muc_du_tru.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                ma_kho: maKho,
+                                ma_hang: maHang,
+                                so_luong_nhap: soLuong
+                            })
+                        });
+
+                        const result = await response.json();
+                        
+                        console.log('Kết quả kiểm tra:', result);
+
+                        if (result.error) {
+                            console.error('Lỗi API:', result.error);
+                            continue;
+                        }
+
+                        if (result.warning) {
+                            warnings.push(result.warning);
+                            console.log('Có cảnh báo:', result.warning);
+                        }
+                    } catch (error) {
+                        console.error('Lỗi kiểm tra mức dự trữ:', error);
+                    }
+                }
+
+                console.log('Tổng cảnh báo:', warnings.length);
+
+                // Nếu có cảnh báo, hiển thị modal
+                if (warnings.length > 0) {
+                    console.log('Hiển thị modal cảnh báo với', warnings.length, 'cảnh báo');
+                    showWarningModal(warnings);
+                    return;
+                }
+
+                // Nếu không có cảnh báo, submit ngay
+                console.log('Không có cảnh báo, submit form');
+                form.submit();
+            });
+        }
+
+        // Hiển thị modal cảnh báo
+        function showWarningModal(warnings) {
+            const modal = document.getElementById('warningModal');
+            const content = document.getElementById('warningContent');
+
+            // Tạo nội dung cảnh báo
+            let html = `
+                <div class="flex items-start gap-3 mb-4">
+                    <span class="material-symbols-outlined text-yellow-600 text-2xl mt-1">warning</span>
+                    <div>
+                        <p class="font-medium text-gray-900 dark:text-white mb-2">Phát hiện mặt hàng sẽ vượt quá mức dự trữ tối đa sau khi nhập:</p>
+                        <ul class="space-y-2">
+                            ${warnings.map(warning => `<li class="text-sm text-gray-700 dark:text-gray-300">• ${warning}</li>`).join('')}
+                        </ul>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-3">
+                            Bạn có muốn tiếp tục nhập không? Hệ thống sẽ vẫn cho phép tạo phiếu nhập.
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Hủy nhập
+        function cancelImport() {
+            const modal = document.getElementById('warningModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Tiếp tục nhập
+        function proceedImport() {
+            const modal = document.getElementById('warningModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            // Submit form
+            const form = document.getElementById('phieuNhapForm');
+            form.submit();
+        }
+
         // Khởi tạo
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, setup form validation');
             switchTab('vat_tu'); // Mặc định tab vật tư
+            setupFormValidation(); // Setup form validation
         });
     </script>
 

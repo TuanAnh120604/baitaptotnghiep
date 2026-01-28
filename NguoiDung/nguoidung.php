@@ -232,6 +232,37 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
 
 <body
     class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 transition-colors duration-200">
+        
+        <?php
+        // Hiển thị modal popup nếu có status từ redirect
+        $status = $_GET['status'] ?? '';
+        $message = $_GET['message'] ?? '';
+        ?>
+
+        <?php if ($status === 'success' && !empty($message)): ?>
+        <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
+            <div class="bg-white dark:bg-surface-dark rounded-xl shadow-2xl max-w-md w-full p-8 text-center">
+                <div class="mb-4 flex justify-center">
+                    <span class="material-symbols-outlined text-6xl text-green-500">check_circle</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Thành công!</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-6"><?= htmlspecialchars($message) ?></p>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($status === 'error' && !empty($message)): ?>
+        <div id="errorModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
+            <div class="bg-white dark:bg-surface-dark rounded-xl shadow-2xl max-w-md w-full p-8 text-center">
+                <div class="mb-4 flex justify-center">
+                    <span class="material-symbols-outlined text-6xl text-red-500">error</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Lỗi!</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-6"><?= htmlspecialchars($message) ?></p>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <?php include '../include/sidebar.php'; ?>
         <div class="flex-1 flex flex-col overflow-hidden">
             <?php include '../include/header.php'; ?>
@@ -403,8 +434,15 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                         Thêm người dùng mới
                                     </h3>
                                     <form id="addUserForm" method="POST" action="add_nguoidung.php"
-                                        class="mt-4 space-y-4">
+                                        class="mt-4 space-y-4" onsubmit="return validateAddUserForm()">
                                         <input type="hidden" name="action" value="add_user">
+                                        <!-- Hiển thị lỗi chung -->
+                                        <div id="addFormErrors" class="hidden p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                            <div class="flex items-start gap-3">
+                                                <span class="material-symbols-outlined text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5">error</span>
+                                                <div id="addFormErrorsList" class="text-sm text-red-700 dark:text-red-300"></div>
+                                            </div>
+                                        </div>
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
@@ -413,6 +451,10 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                                 class="w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-primary focus:ring-primary dark:bg-slate-700 dark:text-white sm:text-sm px-3 py-2"
                                                 id="ten_nd" name="ten_nd" placeholder="Nhập tên người dùng"
                                                 type="text" />
+                                            <span id="ten_nd_error" class="text-xs text-red-600 dark:text-red-400 mt-1 hidden flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-sm">error</span>
+                                                <span id="ten_nd_error_text"></span>
+                                            </span>
                                         </div>
                                         <div>
                                             <label
@@ -421,6 +463,10 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                             <input
                                                 class="w-full rounded-md border-slate-300 dark:border-slate-600 shadow-sm focus:border-primary focus:ring-primary dark:bg-slate-700 dark:text-white sm:text-sm px-3 py-2"
                                                 id="mat_khau" name="mat_khau" placeholder="••••••••" type="password" />
+                                            <span id="mat_khau_error" class="text-xs text-red-600 dark:text-red-400 mt-1 hidden flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-sm">error</span>
+                                                <span id="mat_khau_error_text"></span>
+                                            </span>
                                         </div>
                                         <div class="relative">
                                             <label
@@ -436,6 +482,10 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
+                                            <span id="ma_vai_tro_error" class="text-xs text-red-600 dark:text-red-400 mt-1 hidden flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-sm">error</span>
+                                                <span id="ma_vai_tro_error_text"></span>
+                                            </span>
                                             <div class="mt-4 space-y-4 pt-4 border-t border-border-light dark:border-border-dark"
                                                 id="role-fields-manager">
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -454,6 +504,10 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                                                 </option>
                                                             <?php endforeach; ?>
                                                         </select>
+                                                        <span id="ma_loai_kho_error" class="text-xs text-red-600 dark:text-red-400 mt-1 hidden flex items-center gap-1">
+                                                            <span class="material-symbols-outlined text-sm">error</span>
+                                                            <span id="ma_loai_kho_error_text"></span>
+                                                        </span>
                                                     </div>
                                                     <div>
                                                         <label
@@ -470,6 +524,10 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                                                 </option>
                                                             <?php endforeach; ?>
                                                         </select>
+                                                        <span id="ma_vung_error" class="text-xs text-red-600 dark:text-red-400 mt-1 hidden flex items-center gap-1">
+                                                            <span class="material-symbols-outlined text-sm">error</span>
+                                                            <span id="ma_vung_error_text"></span>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -489,6 +547,10 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                                                             </option>
                                                         <?php endforeach; ?>
                                                     </select>
+                                                    <span id="ma_kho_error" class="text-xs text-red-600 dark:text-red-400 mt-1 hidden flex items-center gap-1">
+                                                        <span class="material-symbols-outlined text-sm">error</span>
+                                                        <span id="ma_kho_error_text"></span>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1016,19 +1078,61 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
         const addUserForm = document.getElementById('addUserForm');
         if (addUserForm) {
             addUserForm.addEventListener('submit', function(e) {
-                // Không cần preventDefault() nữa, để submit bình thường
-                // Hoặc nếu muốn validate trước, thêm validate ở đây rồi submit.
+                e.preventDefault();
+                
+                // Validate trước
+                if (!validateAddUserForm()) {
+                    return false;
+                }
+                
                 const submitBtn = document.getElementById('saveUserBtn');
-                const originalText = submitBtn.innerHTML;
-
-                // Disable button và hiển thị loading (tùy chọn, nhưng không cần fetch)
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>';
 
-                // Submit form bình thường
-                this.submit();
-
-                // Note: Không cần finally vì redirect sẽ xử lý
+                // Submit form bằng AJAX
+                const formData = new FormData(this);
+                
+                fetch('add_nguoidung.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Kiểm xem response có chứa success hay không
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error('Server error');
+                    }
+                })
+                .then(html => {
+                    // Nếu trang chứa "successModal" hoặc có query param success, đó là thành công
+                    if (html.includes('status=success')) {
+                        // Reset form
+                        addUserForm.reset();
+                        document.getElementById('addUserModal').classList.add('hidden');
+                        document.body.style.overflow = '';
+                        
+                        // Hiển thị success modal
+                        showSuccessNotification('Thêm người dùng thành công!');
+                        
+                        // Reload table sau 1.5 giây
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        throw new Error('Có lỗi xảy ra');
+                    }
+                })
+                .catch(error => {
+                    // Lỗi server - hiển thị trong form
+                    const errorContainer = document.getElementById('addFormErrors');
+                    const errorsList = document.getElementById('addFormErrorsList');
+                    errorsList.innerHTML = `<div>• ${error.message || 'Có lỗi xảy ra, vui lòng thử lại'}</div>`;
+                    errorContainer.classList.remove('hidden');
+                    
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Lưu';
+                });
             });
         }
 
@@ -1140,6 +1244,82 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                     document.body.style.overflow = '';
                 }
             });
+        }
+
+        // Hàm validate form thêm người dùng
+        function validateAddUserForm() {
+            const tenNd = document.getElementById('ten_nd').value.trim();
+            const matKhau = document.getElementById('mat_khau').value.trim();
+            const maVaiTro = document.getElementById('ma_vai_tro').value.trim();
+            const maLoaiKho = document.getElementById('ma_loai_kho').value.trim();
+            const maVung = document.getElementById('ma_vung').value.trim();
+            const maKho = document.getElementById('ma_kho').value.trim();
+            
+            const errorContainer = document.getElementById('addFormErrors');
+            const errorsList = document.getElementById('addFormErrorsList');
+            const errors = [];
+            
+            // Xóa tất cả error trước
+            document.querySelectorAll('[id$="_error"]').forEach(el => {
+                if (el.id !== 'addFormErrors') el.classList.add('hidden');
+            });
+            errorContainer.classList.add('hidden');
+            
+            // Validate tên
+            if (tenNd === '') {
+                errors.push('Tên người dùng không được để trống');
+            //     document.getElementById('ten_nd_error').classList.remove('hidden');
+            //     document.getElementById('ten_nd_error_text').textContent = 'Tên người dùng không được để trống';
+             }
+            
+            // Validate mật khẩu
+            if (matKhau === '') {
+                errors.push('Mật khẩu không được để trống');
+                // document.getElementById('mat_khau_error').classList.remove('hidden');
+                // document.getElementById('mat_khau_error_text').textContent = 'Mật khẩu không được để trống';
+            } else if (matKhau.length < 6) {
+                errors.push('Mật khẩu phải có ít nhất 6 ký tự');
+                // document.getElementById('mat_khau_error').classList.remove('hidden');
+                // document.getElementById('mat_khau_error_text').textContent = 'Mật khẩu phải có ít nhất 6 ký tự';
+            }
+            
+            // Validate chức vụ
+            if (maVaiTro === '') {
+                errors.push('Vui lòng chọn chức vụ');
+                // document.getElementById('ma_vai_tro_error').classList.remove('hidden');
+                // document.getElementById('ma_vai_tro_error_text').textContent = 'Vui lòng chọn chức vụ';
+            }
+            
+            // Validate theo chức vụ
+            if (maVaiTro === 'VT003') {
+                if (maLoaiKho === '') {
+                    errors.push('Quản lý kho cần chọn loại kho');
+                    // document.getElementById('ma_loai_kho_error').classList.remove('hidden');
+                    // document.getElementById('ma_loai_kho_error_text').textContent = 'Loại kho không được để trống';
+                }
+                if (maVung === '') {
+                    errors.push('Quản lý kho cần chọn vùng miền');
+                    // document.getElementById('ma_vung_error').classList.remove('hidden');
+                    // document.getElementById('ma_vung_error_text').textContent = 'Vùng miền không được để trống';
+                }
+            }
+            
+            if (maVaiTro === 'VT004') {
+                if (maKho === '') {
+                    errors.push('Thủ kho cần chọn kho');
+                    // document.getElementById('ma_kho_error').classList.remove('hidden');
+                    // document.getElementById('ma_kho_error_text').textContent = 'Kho không được để trống';
+                }
+            }
+            
+            // Hiển thị danh sách lỗi
+            if (errors.length > 0) {
+                errorsList.innerHTML = errors.map(error => `<div>• ${error}</div>`).join('');
+                errorContainer.classList.remove('hidden');
+                return false;
+            }
+            
+            return true;
         }
 
         // Hàm xử lý hiển thị trường theo vai trò
@@ -1260,6 +1440,30 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
             }, 5000);
         }
 
+        // Hàm hiển thị success notification (modal)
+        function showSuccessNotification(message) {
+            const modal = document.createElement('div');
+            modal.id = 'tempSuccessModal';
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-surface-dark rounded-xl shadow-2xl max-w-md w-full p-8 text-center">
+                    <div class="mb-4 flex justify-center">
+                        <span class="material-symbols-outlined text-6xl text-green-500">check_circle</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Thành công!</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-6">${message}</p>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Auto close after 3 seconds
+            setTimeout(() => {
+                if (modal.parentElement) {
+                    modal.remove();
+                }
+            }, 1000);
+        }
+
         //mo xoa
         function openDeleteModal(ma_nd, ten_nd) {
             document.getElementById('delete_user_name').textContent = ten_nd;
@@ -1288,6 +1492,22 @@ $query_string = !empty($query_params) ? '&' . http_build_query($query_params) : 
                     document.body.style.overflow = '';
                 }
             });
+        }
+
+        // Tự động đóng success/error modal sau 3 giây
+        const successModal = document.getElementById('successModal');
+        const errorModal = document.getElementById('errorModal');
+        
+        if (successModal) {
+            setTimeout(function() {
+                successModal.classList.add('hidden');
+            }, 3000); // 3 giây
+        }
+        
+        if (errorModal) {
+            setTimeout(function() {
+                errorModal.classList.add('hidden');
+            }, 3000); // 3 giây
         }
     </script>
 

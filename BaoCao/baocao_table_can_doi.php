@@ -284,16 +284,11 @@ $ket_qua = $stmt_bang->fetchAll(PDO::FETCH_ASSOC);
                                    class="w-full h-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 focus:outline-none transition">
                         </div>
 
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-end lg:col-span-2 xl:col-span-1 xl:flex-col xl:items-stretch">
+                        <div class="flex flex-col justify-end gap-3 sm:flex-row sm:items-end lg:col-span-2 xl:col-span-1 xl:flex-col xl:items-stretch">
                             <button type="submit"
                                     class="px-6 py-2.5 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition-colors">
                                 Lọc dữ liệu
                             </button>
-
-                            <a href="xuat_excel_table_can_doi.php?<?= http_build_query($_GET) ?>"
-                               class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow transition-colors text-center">
-                                📥 Xuất Excel
-                            </a>
                         </div>
 
                     </form>

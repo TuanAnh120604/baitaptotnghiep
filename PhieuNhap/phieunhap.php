@@ -14,6 +14,7 @@ $ma_nd = $_SESSION['MaND'] ?? null;
 // Lấy filter từ GET
 $keyword     = trim($_GET['q'] ?? '');
 $ngay        = $_GET['ngay'] ?? '';
+$highlight   = trim($_GET['highlight'] ?? ''); // Phiếu vừa được tạo cần highlight
 
 // Phân trang
 $items_per_page = 10;
@@ -255,7 +256,7 @@ function getDVGiao($row)
                         <tbody id="tableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
                             <?php if (!empty($phieu_nhap_list)): ?>
                                 <?php foreach ($phieu_nhap_list as $row): ?>
-                                    <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                    <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors <?= ($row['ma_phieu_nhap'] === $highlight) ? 'bg-blue-50 dark:bg-blue-900/20' : '' ?>" <?= ($row['ma_phieu_nhap'] === $highlight) ? 'id="highlight-row"' : '' ?>>
                                         <td class="px-4 py-4 text-center"><input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700"></td>
                                         <td class="px-4 py-4 font-medium text-primary"><?= htmlspecialchars($row['ma_phieu_nhap'] ?? '-') ?></td>
                                         <td class="px-4 py-4 text-center text-gray-600 dark:text-gray-300"><?= formatDate($row['ngay_nhap']) ?></td>
@@ -763,31 +764,73 @@ function getDVGiao($row)
         const input = document.getElementById('searchInput');
         const tbody = document.getElementById('tableBody');
 
-        input.addEventListener('input', () => {
-            clearTimeout(timer);
+        function searchPhieuNhap() {
+            const q = input.value.trim();
+            const ngay = document.querySelector('input[name="ngay"]').value;
 
-            timer = setTimeout(() => {
-                const q = input.value.trim();
-                const ngay = document.querySelector('input[name="ngay"]').value;
+            const params = new URLSearchParams();
+            if (q !== '') params.append('q', q);
+            if (ngay !== '') params.append('ngay', ngay);
 
-                const params = new URLSearchParams();
-                if (q !== '') params.append('q', q);
-                if (ngay !== '') params.append('ngay', ngay);
-
-                fetch('ajax_search_phieu_nhap.php?' + params.toString())
-                    .then(r => r.text())
-                    .then(html => {
-                        tbody.innerHTML = html;
-                    })
-                    .catch(err => {
-                        tbody.innerHTML = `<tr>
+            fetch('ajax_search_phieu_nhap.php?' + params.toString())
+                .then(r => r.text())
+                .then(html => {
+                    tbody.innerHTML = html;
+                })
+                .catch(err => {
+                    tbody.innerHTML = `<tr>
                     <td colspan="9" class="text-center text-red-500 py-6">
                         Lỗi tìm kiếm
                     </td>
                 </tr>`;
-                    });
-            }, 300); // debounce 300ms
+                });
+        }
+
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(searchPhieuNhap, 300);
         });
+
+        // For admin, poll for updates
+        // For admin and warehouse keeper, poll for updates
+        const role = '<?= $role ?>';
+        if (role === 'Admin' || role === 'Thủ kho') {
+            setInterval(searchPhieuNhap, 3000);
+        }
+
+        // Highlight phiếu vừa được tạo
+        document.addEventListener('DOMContentLoaded', function() {
+            const highlightRow = document.getElementById('highlight-row');
+            if (highlightRow) {
+                highlightRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Hiển thị notification
+                showSuccessNotification('Phiếu nhập đã được tạo thành công! Phiếu đang chờ thủ kho xác nhận.');
+            }
+        });
+
+        function showSuccessNotification(message) {
+            // Tạo notification element
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-50 border border-green-200 text-green-700 rounded-lg p-4 shadow-lg z-50 animate-slide-in-right';
+            notification.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-green-600 flex-shrink-0">check_circle</span>
+                    <div>
+                        <p class="font-medium">${message}</p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Tự động xóa sau 5 giây
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
     </script>
 </body>
 

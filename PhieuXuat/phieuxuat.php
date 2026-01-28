@@ -16,6 +16,7 @@ $ma_nd = $_SESSION['MaND'] ?? null;
 // Lấy filter từ GET
 $ngay = $_GET['ngay'] ?? '';
 $q    = trim($_GET['q'] ?? '');
+$highlight = trim($_GET['highlight'] ?? ''); // Phiếu vừa được tạo cần highlight
 
 // Phân trang
 $items_per_page = 10;
@@ -116,12 +117,6 @@ function getDVNhan($row)
     return !empty($row['ten_dai_ly']) ? $row['ten_dai_ly'] : ($row['don_vi_nhan'] ?? '-');
 }
 ?>
-
-
-
-
-<!DOCTYPE html>
-<html lang="vi">
 
 <head>
     <meta charset="utf-8" />
@@ -257,7 +252,7 @@ function getDVNhan($row)
                         <tbody id="tableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
                             <?php if (!empty($phieu_xuat_list)): ?>
                                 <?php foreach ($phieu_xuat_list as $row): ?>
-                                    <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                    <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors <?= ($row['ma_phieu_xuat'] === $highlight) ? 'bg-blue-50 dark:bg-blue-900/20' : '' ?>" <?= ($row['ma_phieu_xuat'] === $highlight) ? 'id="highlight-row"' : '' ?>>
                                         <td class="px-4 py-4 text-center"><input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700"></td>
                                         <td class="px-4 py-4 font-medium text-primary"><?= htmlspecialchars($row['ma_phieu_xuat'] ?? '-') ?></td>
                                         <td class="px-4 py-4 text-center text-gray-600 dark:text-gray-300"><?= formatDate($row['ngay_xuat']) ?></td>
@@ -798,6 +793,7 @@ function getDVNhan($row)
                 });
         }
         let timer = null;
+        let lastContent = ''; // Lưu nội dung cuối cùng để so sánh
 
         const input = document.getElementById('searchInput');
         const tbody = document.getElementById('tableBody');
@@ -814,7 +810,11 @@ function getDVNhan($row)
             fetch('ajax_search_phieu_xuat.php?' + params.toString())
                 .then(r => r.text())
                 .then(html => {
-                    tbody.innerHTML = html;
+                    // Chỉ cập nhật nếu nội dung thay đổi
+                    if (html !== lastContent) {
+                        lastContent = html;
+                        tbody.innerHTML = html;
+                    }
                 })
                 .catch(() => {
                     tbody.innerHTML = `
@@ -834,6 +834,46 @@ function getDVNhan($row)
 
         // Đổi ngày là lọc luôn
         dateInput.addEventListener('change', searchPhieuXuat);
+
+        // For admin, warehouse manager and warehouse keeper, poll for updates
+        const role = '<?= $role ?>';
+        if (role === 'Quản lý kho' || role === 'Admin' || role === 'Thủ kho') {
+            setInterval(searchPhieuXuat, 3000); // Mỗi 3 giây thay vì 1 giây
+        }
+
+        // Highlight phiếu vừa được tạo
+        document.addEventListener('DOMContentLoaded', function() {
+            const highlightRow = document.getElementById('highlight-row');
+            if (highlightRow) {
+                highlightRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Hiển thị notification
+                showSuccessNotification('Phiếu xuất đã được tạo thành công! Phiếu đang chờ thủ kho xác nhận.');
+            }
+        });
+
+        function showSuccessNotification(message) {
+            // Tạo notification element
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-50 border border-green-200 text-green-700 rounded-lg p-4 shadow-lg z-50 animate-slide-in-right';
+            notification.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-green-600 flex-shrink-0">check_circle</span>
+                    <div>
+                        <p class="font-medium">${message}</p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Tự động xóa sau 5 giây
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
     </script>
 </body>
 

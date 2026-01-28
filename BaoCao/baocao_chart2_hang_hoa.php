@@ -330,11 +330,6 @@ foreach ($danh_sach_ngay as &$data) {
                                     class="px-6 py-2.5 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition-colors">
                                 Lọc dữ liệu
                             </button>
-
-                            <a href="xuat_excel_chart2_hang_hoa.php?<?= http_build_query($_GET) ?>"
-                               class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow transition-colors text-center">
-                                📥 Xuất Excel
-                            </a>
                         </div>
 
                     </form>
@@ -411,28 +406,10 @@ foreach ($danh_sach_ngay as &$data) {
         type: 'line',
         data: {
             labels: labelsNgay,
-            datasets: [{
-                    label: 'Lượng nhập',
-                    data: nhapNgay,
-                    borderColor: '#28a745',
-                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: true,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#28a745'
-                },
-                {
-                    label: 'Lượng xuất',
-                    data: xuatNgay,
-                    borderColor: '#dc3545',
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: true,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#dc3545'
-                },
+            datasets: [
+                   
+                
+                
                 {
                     label: 'Tồn cuối kỳ',
                     data: tonNgay,
