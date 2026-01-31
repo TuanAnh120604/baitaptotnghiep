@@ -247,7 +247,7 @@ if (!empty($chart2_ma_hang) && !empty($danh_sach_kho_filtered)) {
 
                 <div class="text-center mb-10">
                     <h1 class="text-3xl md:text-4xl font-bold text-blue-500 dark:text-blue-400 tracking-tight uppercase">
-                        📊 Biến động tồn của loại kho
+                        📊 Biến động tồn của từng loại kho
                     </h1>
                     <p class="mt-3 text-lg text-gray-600 dark:text-gray-400">
                         Biển đồ tồn kho theo thời gian của: <span class="font-bold text-blue-600"><?= $ten_hang_selected ?></span>
