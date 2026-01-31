@@ -3,42 +3,21 @@ include '../include/connect.php';
 include '../include/permissions.php';
 checkAccess('thongke');
 
-// Lấy thông tin user
+// --- 1. KHỞI TẠO VÀ LẤY THAM SỐ FILTER ---
 $role = trim($_SESSION['role'] ?? '');
 $ma_nd = $_SESSION['MaND'] ?? null;
 
-// Lấy các tham số lọc
 $chart2_ma_vung = isset($_GET['chart2_ma_vung']) ? $_GET['chart2_ma_vung'] : '';
 $chart2_loai_kho = isset($_GET['chart2_loai_kho']) ? $_GET['chart2_loai_kho'] : '';
-$chart2_ma_hang = isset($_GET['chart2_ma_hang']) ? $_GET['chart2_ma_hang'] : '';
+$chart2_ma_kho = isset($_GET['chart2_ma_kho']) ? $_GET['chart2_ma_kho'] : ''; 
+$chart2_arr_ma_hang = isset($_GET['chart2_arr_ma_hang']) ? $_GET['chart2_arr_ma_hang'] : []; 
 $chart2_ngay_bat_dau = isset($_GET['chart2_ngay_bat_dau']) ? $_GET['chart2_ngay_bat_dau'] : date('Y-01-01');
 $chart2_ngay_ket_thuc = isset($_GET['chart2_ngay_ket_thuc']) ? $_GET['chart2_ngay_ket_thuc'] : date('Y-m-d');
 
-// Mapping giữa loại kho và loại hàng
-$mapping_loai_kho_hang = [
-    'L001' => 'M001',
-    'L002' => 'M002',
-    'L003' => 'M003',
-    'L004' => 'M004'
-];
+// --- 2. LẤY DATA CHO DROPDOWN ---
+// (Logic giữ nguyên để đảm bảo quyền hạn và dữ liệu chính xác)
 
-// Xây dựng điều kiện lọc kho theo quyền
-$kho_condition = '';
-$kho_params = [];
-if ($role === 'Thủ kho' && $ma_nd) {
-    $kho_condition = 'AND k.ma_nd = ?';
-    $kho_params[] = $ma_nd;
-} elseif ($role === 'Quản lý kho' && $ma_nd) {
-    $kho_condition = 'AND k.ma_kho IN (
-        SELECT k2.ma_kho 
-        FROM kho k2 
-        JOIN phan_quyen pq ON k2.ma_vung = pq.ma_vung AND k2.ma_loai_kho = pq.ma_loai_kho 
-        WHERE pq.ma_nd = ?
-    )';
-    $kho_params[] = $ma_nd;
-}
-
-// Lấy danh sách vùng miền (theo quyền)
+// A. Danh sách Vùng
 $sql_vung = "SELECT * FROM vung_mien WHERE 1=1";
 $params_vung = [];
 if ($role === 'Thủ kho' && $ma_nd) {
@@ -48,413 +27,372 @@ if ($role === 'Thủ kho' && $ma_nd) {
     $sql_vung .= " AND ma_vung IN (SELECT DISTINCT ma_vung FROM phan_quyen WHERE ma_nd = ?)";
     $params_vung[] = $ma_nd;
 }
-$sql_vung .= " ORDER BY ten_vung";
 $stmt_vung = $pdo->prepare($sql_vung);
 $stmt_vung->execute($params_vung);
 $danh_sach_vung = $stmt_vung->fetchAll(PDO::FETCH_ASSOC);
 
-// Lấy danh sách loại kho (theo quyền)
+// B. Danh sách Loại kho
 $sql_loai_kho = "SELECT DISTINCT lk.* FROM loai_kho lk JOIN kho k ON lk.ma_loai_kho = k.ma_loai_kho WHERE 1=1";
 $params_loai_kho = [];
 if ($role === 'Thủ kho' && $ma_nd) {
     $sql_loai_kho .= " AND k.ma_nd = ?";
     $params_loai_kho[] = $ma_nd;
 } elseif ($role === 'Quản lý kho' && $ma_nd) {
-    $sql_loai_kho .= " AND k.ma_kho IN (
-        SELECT k2.ma_kho 
-        FROM kho k2 
-        JOIN phan_quyen pq ON k2.ma_vung = pq.ma_vung AND k2.ma_loai_kho = pq.ma_loai_kho 
-        WHERE pq.ma_nd = ?
-    )";
+    $sql_loai_kho .= " AND k.ma_kho IN (SELECT k2.ma_kho FROM kho k2 JOIN phan_quyen pq ON k2.ma_vung = pq.ma_vung AND k2.ma_loai_kho = pq.ma_loai_kho WHERE pq.ma_nd = ?)";
     $params_loai_kho[] = $ma_nd;
 }
-$sql_loai_kho .= " ORDER BY lk.ma_loai_kho";
+if (!empty($chart2_ma_vung)) {
+    $sql_loai_kho .= " AND k.ma_vung = ?";
+    $params_loai_kho[] = $chart2_ma_vung;
+}
 $stmt_loai_kho = $pdo->prepare($sql_loai_kho);
 $stmt_loai_kho->execute($params_loai_kho);
 $danh_sach_loai_kho = $stmt_loai_kho->fetchAll(PDO::FETCH_ASSOC);
 
-// Lấy danh sách hàng hóa
-$danh_sach_hang = [];
-if (!empty($chart2_loai_kho) && isset($mapping_loai_kho_hang[$chart2_loai_kho])) {
-    $ma_loai_hang = $mapping_loai_kho_hang[$chart2_loai_kho];
-    $stmt_hang = $pdo->prepare("SELECT * FROM hang_hoa WHERE ma_loai_hang = ? ORDER BY ma_hang");
-    $stmt_hang->execute([$ma_loai_hang]);
-    $danh_sach_hang = $stmt_hang->fetchAll(PDO::FETCH_ASSOC);
+// C. Danh sách Kho cụ thể
+$sql_kho = "SELECT ma_kho, ten_kho FROM kho WHERE 1=1";
+$params_kho = [];
+if ($role === 'Thủ kho' && $ma_nd) {
+    $sql_kho .= " AND ma_nd = ?";
+    $params_kho[] = $ma_nd;
+} elseif ($role === 'Quản lý kho' && $ma_nd) {
+    $sql_kho .= " AND ma_kho IN (SELECT k.ma_kho FROM kho k JOIN phan_quyen pq ON k.ma_vung = pq.ma_vung AND k.ma_loai_kho = pq.ma_loai_kho WHERE pq.ma_nd = ?)";
+    $params_kho[] = $ma_nd;
+}
+if (!empty($chart2_ma_vung)) { $sql_kho .= " AND ma_vung = ?"; $params_kho[] = $chart2_ma_vung; }
+if (!empty($chart2_loai_kho)) { $sql_kho .= " AND ma_loai_kho = ?"; $params_kho[] = $chart2_loai_kho; }
+$sql_kho .= " ORDER BY ten_kho";
+$stmt_kho = $pdo->prepare($sql_kho);
+$stmt_kho->execute($params_kho);
+$danh_sach_kho = $stmt_kho->fetchAll(PDO::FETCH_ASSOC);
+
+// D. Danh sách Hàng hóa
+// Chỉ lấy những mặt hàng có tồn kho > 0 tại ngày kết thúc (lọc theo kho/vùng/loại và quyền)
+$params_hang = [];
+// Xác định danh sách kho hợp lệ (dùng $danh_sach_kho đã lấy phía trên)
+if (!empty($chart2_ma_kho)) {
+    $valid_kho_ids = [$chart2_ma_kho];
 } else {
-    $stmt_hang = $pdo->query("SELECT * FROM hang_hoa ORDER BY ma_hang");
-    $danh_sach_hang = $stmt_hang->fetchAll(PDO::FETCH_ASSOC);
+    $valid_kho_ids = array_column($danh_sach_kho, 'ma_kho');
+}
+if (empty($valid_kho_ids)) $valid_kho_ids = ['0'];
+$placeholders = implode(',', array_fill(0, count($valid_kho_ids), '?'));
+$where_kho_sql = " AND t.ma_kho IN ($placeholders) ";
+
+// Tham số: ngày kết thúc cho nhập và xuất, sau đó các id kho
+$params_hang = [$chart2_ngay_ket_thuc, $chart2_ngay_ket_thuc];
+foreach ($valid_kho_ids as $id) $params_hang[] = $id;
+
+$sql_hang = "SELECT DISTINCT h.ma_hang, h.ten_hang, h.don_vi_tinh
+FROM hang_hoa h
+JOIN (
+    SELECT t.ma_hang, SUM(t.qty) AS ton
+    FROM (
+        SELECT ct.ma_hang, ct.so_luong_nhap AS qty, pn.ma_kho, pn.ngay_nhap AS ngay, pn.trang_thai
+        FROM ct_phieu_nhap ct JOIN phieu_nhap pn ON ct.ma_phieu_nhap = pn.ma_phieu_nhap
+        WHERE pn.trang_thai = 'da_xac_nhan' AND pn.ngay_nhap <= ?
+        UNION ALL
+        SELECT ct.ma_hang, -ct.so_luong_xuat AS qty, px.ma_kho, px.ngay_xuat AS ngay, px.trang_thai
+        FROM ct_phieu_xuat ct JOIN phieu_xuat px ON ct.ma_phieu_xuat = px.ma_phieu_xuat
+        WHERE px.trang_thai = 'da_xac_nhan' AND px.ngay_xuat <= ?
+    ) t
+    WHERE 1=1 $where_kho_sql
+    GROUP BY t.ma_hang
+    HAVING SUM(t.qty) > 0
+) s ON h.ma_hang = s.ma_hang
+ORDER BY h.ten_hang";
+
+$stmt_hang = $pdo->prepare($sql_hang);
+$stmt_hang->execute($params_hang);
+$danh_sach_hang = $stmt_hang->fetchAll(PDO::FETCH_ASSOC);
+
+
+// --- 3. TÍNH TOÁN DỮ LIỆU ---
+$labels_ngay = [];
+$ts_cur = strtotime($chart2_ngay_bat_dau);
+$ts_end = strtotime($chart2_ngay_ket_thuc);
+while ($ts_cur <= $ts_end) {
+    $labels_ngay[] = date('Y-m-d', $ts_cur);
+    $ts_cur = strtotime('+1 day', $ts_cur);
 }
 
-// ============ QUERY: BIỂU ĐỒ HÀNG HÓA THEO NGÀY ============
-$ngay_hien_tai = strtotime($chart2_ngay_bat_dau);
-$ngay_ket_thuc_ts = strtotime($chart2_ngay_ket_thuc);
-$danh_sach_ngay = [];
+$chart_colors = ['#2563eb', '#dc2626', '#16a34a', '#d97706', '#9333ea', '#0891b2', '#db2777', '#4b5563'];
+$datasets = [];
+$summary_cards = [];
+$color_index = 0;
 
-while ($ngay_hien_tai <= $ngay_ket_thuc_ts) {
-    $danh_sach_ngay[date('Y-m-d', $ngay_hien_tai)] = [
-        'nhap' => 0,
-        'xuat' => 0,
-        'ton' => 0
-    ];
-    $ngay_hien_tai = strtotime('+1 day', $ngay_hien_tai);
-}
+if (!empty($chart2_arr_ma_hang)) {
+    foreach ($chart2_arr_ma_hang as $ma_hang_selected) {
+        $ten_hang = "";
+        $dvt = "";
+        foreach($danh_sach_hang as $h){
+            if($h['ma_hang'] == $ma_hang_selected){
+                $ten_hang = $h['ten_hang'];
+                $dvt = $h['don_vi_tinh'];
+                break;
+            }
+        }
+        if(empty($ten_hang)) continue;
 
-// Lấy dữ liệu nhập theo ngày (chỉ lấy phiếu đã xác nhận)
-$sql_daily_nhap = "
-    SELECT 
-        DATE(pn.ngay_nhap) as ngay,
-        SUM(ct.so_luong_nhap) as so_luong
-    FROM phieu_nhap pn
-    JOIN kho k ON pn.ma_kho = k.ma_kho
-    JOIN ct_phieu_nhap ct ON pn.ma_phieu_nhap = ct.ma_phieu_nhap
-    WHERE pn.ngay_nhap BETWEEN ? AND ?
-      AND pn.trang_thai = 'da_xac_nhan'
-";
+        $where_kho_sql = "";
+        $params_ton = [];
 
-$params_daily = [$chart2_ngay_bat_dau, $chart2_ngay_ket_thuc];
+        if (!empty($chart2_ma_kho)) {
+            $where_kho_sql = " AND ma_kho = ? ";
+            $params_ton[] = $chart2_ma_kho;
+        } else {
+            $valid_kho_ids = array_column($danh_sach_kho, 'ma_kho');
+            if(empty($valid_kho_ids)) $valid_kho_ids = ['0'];
+            $placeholders = implode(',', array_fill(0, count($valid_kho_ids), '?'));
+            $where_kho_sql = " AND ma_kho IN ($placeholders) ";
+            foreach($valid_kho_ids as $id) $params_ton[] = $id;
+        }
 
-// Thêm điều kiện phân quyền vào đầu WHERE clause
-if (!empty($kho_condition)) {
-    $sql_daily_nhap .= " " . $kho_condition;
-    $params_daily = array_merge($params_daily, $kho_params);
-}
+        // Tồn đầu
+        $p_dau_ky = array_merge($params_ton, [$ma_hang_selected, $chart2_ngay_bat_dau]);
+        $stmt = $pdo->prepare("SELECT SUM(ct.so_luong_nhap) FROM phieu_nhap pn JOIN ct_phieu_nhap ct ON pn.ma_phieu_nhap = ct.ma_phieu_nhap WHERE pn.trang_thai = 'da_xac_nhan' $where_kho_sql AND ct.ma_hang = ? AND pn.ngay_nhap < ?");
+        $stmt->execute($p_dau_ky);
+        $nhap_dk = $stmt->fetchColumn() ?: 0;
+        $stmt = $pdo->prepare("SELECT SUM(ct.so_luong_xuat) FROM phieu_xuat px JOIN ct_phieu_xuat ct ON px.ma_phieu_xuat = ct.ma_phieu_xuat WHERE px.trang_thai = 'da_xac_nhan' $where_kho_sql AND ct.ma_hang = ? AND px.ngay_xuat < ?");
+        $stmt->execute($p_dau_ky);
+        $xuat_dk = $stmt->fetchColumn() ?: 0;
+        $ton_dau_ky = $nhap_dk - $xuat_dk;
 
-if (!empty($chart2_ma_vung)) {
-    $sql_daily_nhap .= " AND k.ma_vung = ?";
-    $params_daily[] = $chart2_ma_vung;
-}
+        // Trong kỳ
+        $changes = array_fill_keys($labels_ngay, 0);
+        $p_trong_ky = array_merge($params_ton, [$ma_hang_selected, $chart2_ngay_bat_dau, $chart2_ngay_ket_thuc]);
+        
+        $stmt = $pdo->prepare("SELECT DATE(pn.ngay_nhap) as ngay, SUM(ct.so_luong_nhap) as sl FROM phieu_nhap pn JOIN ct_phieu_nhap ct ON pn.ma_phieu_nhap = ct.ma_phieu_nhap WHERE pn.trang_thai = 'da_xac_nhan' $where_kho_sql AND ct.ma_hang = ? AND pn.ngay_nhap BETWEEN ? AND ? GROUP BY DATE(pn.ngay_nhap)");
+        $stmt->execute($p_trong_ky);
+        while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) $changes[$r['ngay']] += $r['sl'];
 
-if (!empty($chart2_loai_kho)) {
-    $sql_daily_nhap .= " AND k.ma_loai_kho = ?";
-    $params_daily[] = $chart2_loai_kho;
-}
+        $stmt = $pdo->prepare("SELECT DATE(px.ngay_xuat) as ngay, SUM(ct.so_luong_xuat) as sl FROM phieu_xuat px JOIN ct_phieu_xuat ct ON px.ma_phieu_xuat = ct.ma_phieu_xuat WHERE px.trang_thai = 'da_xac_nhan' $where_kho_sql AND ct.ma_hang = ? AND px.ngay_xuat BETWEEN ? AND ? GROUP BY DATE(px.ngay_xuat)");
+        $stmt->execute($p_trong_ky);
+        while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) $changes[$r['ngay']] -= $r['sl'];
 
-if (!empty($chart2_ma_hang)) {
-    $sql_daily_nhap .= " AND ct.ma_hang = ?";
-    $params_daily[] = $chart2_ma_hang;
-}
+        $data_points = [];
+        $curr = $ton_dau_ky;
+        foreach ($labels_ngay as $d) {
+            $curr += $changes[$d];
+            $data_points[] = $curr;
+        }
 
-$sql_daily_nhap .= " GROUP BY DATE(pn.ngay_nhap) ORDER BY pn.ngay_nhap";
-
-$stmt_daily = $pdo->prepare($sql_daily_nhap);
-$stmt_daily->execute($params_daily);
-$daily_nhap = $stmt_daily->fetchAll(PDO::FETCH_ASSOC);
-
-// Lấy dữ liệu xuất theo ngày (chỉ lấy phiếu đã xác nhận)
-$sql_daily_xuat = "
-    SELECT 
-        DATE(px.ngay_xuat) as ngay,
-        SUM(ct.so_luong_xuat) as so_luong
-    FROM phieu_xuat px
-    JOIN kho k ON px.ma_kho = k.ma_kho
-    JOIN ct_phieu_xuat ct ON px.ma_phieu_xuat = ct.ma_phieu_xuat
-    WHERE px.ngay_xuat BETWEEN ? AND ?
-      AND px.trang_thai = 'da_xac_nhan'
-";
-
-$params_daily_xuat = [$chart2_ngay_bat_dau, $chart2_ngay_ket_thuc];
-
-// Thêm điều kiện phân quyền vào đầu WHERE clause
-if (!empty($kho_condition)) {
-    $sql_daily_xuat .= " " . $kho_condition;
-    $params_daily_xuat = array_merge($params_daily_xuat, $kho_params);
-}
-
-if (!empty($chart2_ma_vung)) {
-    $sql_daily_xuat .= " AND k.ma_vung = ?";
-    $params_daily_xuat[] = $chart2_ma_vung;
-}
-
-if (!empty($chart2_loai_kho)) {
-    $sql_daily_xuat .= " AND k.ma_loai_kho = ?";
-    $params_daily_xuat[] = $chart2_loai_kho;
-}
-
-if (!empty($chart2_ma_hang)) {
-    $sql_daily_xuat .= " AND ct.ma_hang = ?";
-    $params_daily_xuat[] = $chart2_ma_hang;
-}
-
-$sql_daily_xuat .= " GROUP BY DATE(px.ngay_xuat) ORDER BY px.ngay_xuat";
-
-$stmt_daily_xuat = $pdo->prepare($sql_daily_xuat);
-$stmt_daily_xuat->execute($params_daily_xuat);
-$daily_xuat = $stmt_daily_xuat->fetchAll(PDO::FETCH_ASSOC);
-
-// Gộp dữ liệu theo ngày
-foreach ($daily_nhap as $row) {
-    $ngay = $row['ngay'];
-    if (isset($danh_sach_ngay[$ngay])) {
-        $danh_sach_ngay[$ngay]['nhap'] = (int)$row['so_luong'];
+        $this_color = $chart_colors[$color_index % count($chart_colors)];
+        $datasets[] = ['label' => $ten_hang, 'data' => $data_points, 'borderColor' => $this_color, 'dvt' => $dvt];
+        $summary_cards[] = ['ten_hang' => $ten_hang, 'ton_cuoi' => end($data_points), 'dvt' => $dvt, 'color' => $this_color];
+        $color_index++;
     }
-}
-
-foreach ($daily_xuat as $row) {
-    $ngay = $row['ngay'];
-    if (isset($danh_sach_ngay[$ngay])) {
-        $danh_sach_ngay[$ngay]['xuat'] = (int)$row['so_luong'];
-    }
-}
-
-// Tính tồn theo ngày
-$ton_hien_tai = 0;
-foreach ($danh_sach_ngay as &$data) {
-    $ton_hien_tai = $ton_hien_tai + $data['nhap'] - $data['xuat'];
-    $data['ton'] = $ton_hien_tai;
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biểu Đồ Hàng Hóa - Báo Cáo Kho</title>
+    <title>Biểu Đồ Biến Động Hàng Hóa</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Nếu đã build Tailwind → thay bằng: <link href="/css/output.css" rel="stylesheet"> -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .summary-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
+        /* Tùy chỉnh thanh cuộn cho multi-select */
+        select[multiple]::-webkit-scrollbar { width: 4px; }
+        select[multiple]::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 transition-colors duration-200 h-screen flex flex-col overflow-hidden">
-
+<body class="bg-[#f8fafc] dark:bg-gray-900 text-slate-800 dark:text-slate-200 h-screen flex flex-col overflow-hidden">
     <?php include '../include/sidebar.php'; ?>
 
     <div class="flex-1 flex flex-col overflow-hidden">
-
         <?php include '../include/header.php'; ?>
 
-        <main class="flex-1 overflow-y-auto bg-white dark:bg-gray-800">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-
-                <!-- Nút quay lại -->
-                <div class="mb-6">
+        <main class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col mb-6">
+                    <div class="mb-6">
                     <a href="baocao_bancandoi.php"
                        class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition-colors">
                         ← Quay lại
                     </a>
-                </div>
-
-                <!-- Tiêu đề -->
-                <div class="text-center mb-10">
-                    <h1 class="text-3xl md:text-4xl font-bold text-blue-500 dark:text-blue-400 tracking-tight">
-                        📊 BIỂU ĐỒ BIẾN ĐỘNG THEO HÀNG HÓA
+                 <div class="text-center mb-10">
+                    <h1 class="text-3xl md:text-4xl font-bold text-blue-500 dark:text-blue-400 tracking-tight uppercase">
+                        📊 Biến động tồn của mặt hàng
                     </h1>
-                    <p class="mt-3 text-lg text-gray-600 dark:text-gray-400">
-                        Xem biến động nhập/xuất hàng hóa theo từng ngày
-                    </p>
+                   
                 </div>
 
-                <!-- Bộ lọc -->
-                <div class="bg-gray-100 dark:bg-gray-700 rounded-xl shadow-md p-6 mb-10">
-                    <h3 class="text-xl font-semibold mb-5 text-gray-800 dark:text-gray-100">
-                        Bộ lọc biểu đồ
-                    </h3>
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700 p-6 mb-6">
+    <h3 class="text-lg font-bold mb-6 text-gray-800 dark:text-gray-100 uppercase tracking-tight">
+        Bộ lọc biểu đồ
+    </h3>
 
-                    <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4" id="filterForm">
+    <form method="GET" id="filterForm" class="space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="flex flex-col">
+                <label class="text-[11px] font-bold uppercase text-slate-400 mb-2 tracking-wider">Vùng miền</label>
+                <select name="chart2_ma_vung" class="h-[42px] w-full bg-slate-50 dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg px-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all">
+                    <option value="">Tất cả vùng</option>
+                    <?php foreach ($danh_sach_vung as $v): ?>
+                        <option value="<?= $v['ma_vung'] ?>" <?= $chart2_ma_vung == $v['ma_vung'] ? 'selected' : '' ?>><?= $v['ten_vung'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-                        <!-- Vùng miền -->
-                        <div>
-                            <label for="chart2_ma_vung" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Vùng miền
-                            </label>
-                            <select name="chart2_ma_vung" id="chart2_ma_vung"
-                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">-- Tất cả --</option>
-                                <?php foreach ($danh_sach_vung as $v): ?>
-                                    <option value="<?= htmlspecialchars($v['ma_vung']) ?>"
-                                        <?= $chart2_ma_vung === $v['ma_vung'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($v['ten_vung']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+            <div class="flex flex-col">
+                <label class="text-[11px] font-bold uppercase text-slate-400 mb-2 tracking-wider">Loại kho</label>
+                <select name="chart2_loai_kho" class="h-[42px] w-full bg-slate-50 dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg px-3 text-sm focus:ring-2 focus:ring-blue-500 transition-all" >
+                    <option value="">Tất cả loại kho</option>
+                    <?php foreach ($danh_sach_loai_kho as $lk): ?>
+                        <option value="<?= $lk['ma_loai_kho'] ?>" <?= $chart2_loai_kho == $lk['ma_loai_kho'] ? 'selected' : '' ?>><?= $lk['ten_loai_kho'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-                        <!-- Loại kho -->
-                        <div>
-                            <label for="chart2_loai_kho" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Loại kho
-                            </label>
-                            <select name="chart2_loai_kho" id="chart2_loai_kho" onchange="updateHangHoaList()"
-                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">-- Tất cả --</option>
-                                <?php foreach ($danh_sach_loai_kho as $lk): ?>
-                                    <option value="<?= htmlspecialchars($lk['ma_loai_kho']) ?>"
-                                        <?= $chart2_loai_kho === $lk['ma_loai_kho'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($lk['ten_loai_kho']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+            <div class="flex flex-col">
+                <label class="text-[11px] font-bold uppercase text-slate-400 mb-2 tracking-wider">Kho cụ thể</label>
+                <select name="chart2_ma_kho" class="h-[42px] w-full bg-slate-50 dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg px-3 text-sm font-medium focus:ring-2 focus:ring-blue-500 transition-all">
+                    <option value="">Chọn kho</option>
+                    <?php foreach ($danh_sach_kho as $k): ?>
+                        <option value="<?= $k['ma_kho'] ?>" <?= $chart2_ma_kho == $k['ma_kho'] ? 'selected' : '' ?>><?= $k['ten_kho'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-                        <!-- Hàng hóa -->
-                        <div>
-                            <label for="chart2_ma_hang" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Hàng hóa
-                            </label>
-                            <select name="chart2_ma_hang" id="chart2_ma_hang"
-                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">-- Tất cả --</option>
-                                <?php foreach ($danh_sach_hang as $h): ?>
-                                    <option value="<?= htmlspecialchars($h['ma_hang']) ?>"
-                                        <?= $chart2_ma_hang === $h['ma_hang'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($h['ma_hang'] . ' - ' . $h['ten_hang']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+            <div class="flex flex-col">
+                <label class="text-[11px] font-bold uppercase text-slate-400 mb-2 tracking-wider">Mặt hàng</label>
+                <select name="chart2_arr_ma_hang[]" class="h-[42px] w-full bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 overflow-y-auto">
+                     <option value="">Chọn mặt hàng</option>
+                    <?php foreach ($danh_sach_hang as $h): ?>
+                        <option value="<?= $h['ma_hang'] ?>" <?= in_array($h['ma_hang'], $chart2_arr_ma_hang) ? 'selected' : '' ?>><?= $h['ten_hang'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-                        <!-- Từ ngày -->
-                        <div>
-                            <label for="chart2_ngay_bat_dau" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Từ ngày
-                            </label>
-                            <input type="date" name="chart2_ngay_bat_dau" id="chart2_ngay_bat_dau"
-                                   value="<?= htmlspecialchars($chart2_ngay_bat_dau) ?>"
-                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
-                        </div>
+            <div class="flex flex-col justify-end">
+               <button type="submit" class="px-6 py-2.5 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition-colors">Lọc dữ liệu</button>
+            </div>
+        </div>
 
-                        <!-- Đến ngày -->
-                        <div>
-                            <label for="chart2_ngay_ket_thuc" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Đến ngày
-                            </label>
-                            <input type="date" name="chart2_ngay_ket_thuc" id="chart2_ngay_ket_thuc"
-                                   value="<?= htmlspecialchars($chart2_ngay_ket_thuc) ?>"
-                                   class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-
-                        <!-- Nút lọc + xuất excel -->
-                        <div class="flex flex-col justify-end gap-3 sm:flex-row sm:items-end lg:col-span-2 xl:col-span-1 xl:flex-col xl:items-stretch">
-                            <button type="submit"
-                                    class="px-6 py-2.5 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition-colors">
-                                Lọc dữ liệu
-                            </button>
-                        </div>
-
-                    </form>
+        <div class="pt-4 border-t border-slate-100 dark:border-gray-700">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="lg:col-span-2 flex flex-col">
+                    <label class="text-[11px] font-bold uppercase text-slate-400 mb-2 tracking-wider">Khoảng thời gian (Từ ngày - Đến ngày)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="date" name="chart2_ngay_bat_dau" value="<?= $chart2_ngay_bat_dau ?>" class="h-[42px] flex-1 bg-slate-50 dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg px-3 text-sm focus:ring-2 focus:ring-blue-500">
+                        <span class="text-slate-300">—</span>
+                        <input type="date" name="chart2_ngay_ket_thuc" value="<?= $chart2_ngay_ket_thuc ?>" class="h-[42px] flex-1 bg-slate-50 dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg px-3 text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
                 </div>
+            </div>
+        </div>
+    </form>
+</div>
 
-                <!-- Khu vực biểu đồ -->
-                <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6">
-                    <div class="h-[450px] md:h-[500px]">
-                        <canvas id="chartHangHoa"></canvas>
+
+                <?php if (!empty($summary_cards)): ?>
+                <div class="mb-6">
+                    <h3 class="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Tổng hợp tồn kho cuối kỳ (<?= date('d/m/Y', strtotime($chart2_ngay_ket_thuc)) ?>)</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        <?php foreach ($summary_cards as $card): ?>
+                            <div class="summary-card bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-gray-700 relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-1 h-full" style="background-color: <?= $card['color'] ?>;"></div>
+                                <p class="text-slate-400 text-[10px] font-bold uppercase mb-1 truncate" title="<?= $card['ten_hang'] ?>">
+                                    <?= $card['ten_hang'] ?>
+                                </p>
+                                <h4 class="text-lg font-bold text-slate-800 dark:text-white">
+                                    <?= number_format($card['ton_cuoi'], 0, ',', '.') ?> <span class="text-xs font-normal text-slate-500"><?= $card['dvt'] ?></span>
+                                </h4>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-200 dark:border-gray-700 p-4">
+                    <div class="h-[500px]">
+                        <?php if (empty($chart2_arr_ma_hang)): ?>
+                            <div class="flex flex-col items-center justify-center h-full text-slate-400 italic">
+                                <p>Chọn mặt hàng để xem biểu đồ</p>
+                            </div>
+                        <?php else: ?>
+                            <canvas id="chartHangHoa"></canvas>
+                        <?php endif; ?>
                     </div>
                 </div>
 
             </div>
         </main>
-
     </div>
 
     <script>
-    // Mapping giữa loại kho và loại hàng
-    const mappingLoaiKhoHang = {
-        'L001': 'M001',
-        'L002': 'M002',
-        'L003': 'M003',
-        'L004': 'M004'
-    };
+    <?php if (!empty($datasets)): ?>
+        const ctx = document.getElementById('chartHangHoa').getContext('2d');
+        const labels = <?= json_encode($labels_ngay) ?>;
+        const rawDatasets = <?= json_encode($datasets) ?>;
 
-    // Dữ liệu tất cả hàng hóa
-    const allHangHoa = <?php 
-    $stmt_all = $pdo->query("SELECT ma_hang, ten_hang, ma_loai_hang, don_vi_tinh FROM hang_hoa ORDER BY ma_hang");
-    $all_hangs = $stmt_all->fetchAll(PDO::FETCH_ASSOC);
-    echo json_encode($all_hangs);
-?>;
-
-    // Cập nhật danh sách hàng hóa
-    function updateHangHoaList() {
-        const loaiKhoSelect = document.getElementById('chart2_loai_kho');
-        const maHangSelect = document.getElementById('chart2_ma_hang');
-        const selectedLoaiKho = loaiKhoSelect.value;
-
-        let selectedLoaiHang = '';
-        if (selectedLoaiKho && mappingLoaiKhoHang[selectedLoaiKho]) {
-            selectedLoaiHang = mappingLoaiKhoHang[selectedLoaiKho];
-        }
-
-        let filteredHangs;
-        if (selectedLoaiHang) {
-            filteredHangs = allHangHoa.filter(h => h.ma_loai_hang === selectedLoaiHang);
-        } else {
-            filteredHangs = allHangHoa;
-        }
-
-        const currentValue = maHangSelect.value;
-        maHangSelect.innerHTML = '<option value="">-- Tất cả --</option>';
-
-        filteredHangs.forEach(hang => {
-            const option = document.createElement('option');
-            option.value = hang.ma_hang;
-            option.textContent = hang.ma_hang + ' - ' + hang.ten_hang + ' (' + hang.don_vi_tinh + ')';
-            maHangSelect.appendChild(option);
-        });
-
-        maHangSelect.value = currentValue;
-    }
-
-    // Dữ liệu biểu đồ
-    const dataNgay = <?php echo json_encode($danh_sach_ngay); ?>;
-    const labelsNgay = Object.keys(dataNgay);
-    const nhapNgay = labelsNgay.map(ngay => dataNgay[ngay].nhap);
-    const xuatNgay = labelsNgay.map(ngay => dataNgay[ngay].xuat);
-    const tonNgay = labelsNgay.map(ngay => dataNgay[ngay].ton);
-
-    const ctxHang = document.getElementById('chartHangHoa').getContext('2d');
-    new Chart(ctxHang, {
-        type: 'line',
-        data: {
-            labels: labelsNgay,
-            datasets: [
-                   
-                
-                
-                {
-                    label: 'Tồn cuối kỳ',
-                    data: tonNgay,
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: true,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#007bff'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Biến động theo ngày'
-                },
-                legend: {
-                    display: true,
-                    position: 'top'
-                }
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: rawDatasets.map(ds => ({
+                    label: ds.label,
+                    data: ds.data,
+                    borderColor: ds.borderColor,
+                    backgroundColor: ds.borderColor,
+                    // CẤU HÌNH NHƯ HÌNH ẢNH YÊU CẦU:
+                    fill: false,            // Không đổ màu khối
+                    tension: 0.3,           // Đường cong mềm mại
+                    borderWidth: 2.5,       // Độ dày đường
+                    pointRadius: 4,         // Kích thước nút
+                    pointBackgroundColor: ds.borderColor, 
+                    pointBorderColor: "#ffffff", // Viền trắng quanh nút
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 6,
+                    dvt: ds.dvt 
+                }))
             },
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Ngày'
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 20, font: { family: 'Inter', size: 12 } }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#1e293b',
+                        bodyColor: '#475569',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + 
+                                       context.parsed.y.toLocaleString('vi-VN') + ' ' + (context.dataset.dvt || '');
+                            }
+                        }
                     }
                 },
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return value.toLocaleString('vi-VN');
-                        }
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+                    y: {
+                        beginAtZero: true,
+                        border: { display: false },
+                        grid: { color: '#f1f5f9' },
+                        ticks: { color: '#94a3b8', callback: v => v.toLocaleString('vi-VN') }
                     }
                 }
             }
-        }
-    });
+        });
+    <?php endif; ?>
     </script>
-
 </body>
 </html>

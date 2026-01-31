@@ -46,10 +46,10 @@ include '../include/connect.php';
 
                         <div class="pt-10 pb-6 text-center text-6xl text-blue-600">📊</div>
                         <h2 class="px-6 text-2xl font-bold text-center text-gray-800 dark:text-gray-100 min-h-[60px] flex items-center justify-center">
-                            Biến động tồn theo kho
+                            Biến động hàng hoá theo kho
                         </h2>
                         <p class="px-6 mt-3 text-gray-600 dark:text-gray-300 text-center text-sm">
-                            Xem biến động nhập/xuất hàng hóa theo từng ngày
+                            Biểu đồ biểu diễn lượng tồn kho của mặt hàng với các kho.
                         </p>
                         <div class="px-6 mt-4 text-sm text-gray-500 dark:text-gray-400 flex-grow">
                             <strong class="block mb-2">Bộ lọc:</strong>
@@ -72,16 +72,17 @@ include '../include/connect.php';
 
                         <div class="pt-10 pb-6 text-center text-6xl text-blue-600">📊</div>
                         <h2 class="px-6 text-2xl font-bold text-center text-gray-800 dark:text-gray-100 min-h-[60px] flex items-center justify-center">
-                            Biến động tồn theo mặt hàng
+                            Biến động tồn kho theo danh mục hàng hoá
                         </h2>
                         <p class="px-6 mt-3 text-gray-600 dark:text-gray-300 text-center text-sm">
-                            Xem biến động nhập/xuất hàng hóa theo từng ngày
+                            Biểu đồ tồn kho của các mặt hàng theo ngày.
                         </p>
                         <div class="px-6 mt-4 text-sm text-gray-500 dark:text-gray-400 flex-grow">
                             <strong class="block mb-2">Bộ lọc:</strong>
                             <ul class="list-disc pl-5 space-y-1">
                                 <li>Vùng miền</li>
                                 <li>Loại kho</li>
+                                 <li>Kho</li>
                                 <li>Hàng hóa</li>
                                 <li>Khoảng thời gian</li>
                             </ul>
@@ -151,11 +152,11 @@ include '../include/connect.php';
                 <!-- Phần hướng dẫn -->
                 <section class="mt-16 bg-white dark:bg-gray-700 rounded-xl shadow-lg p-8">
                     <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-3">
-                        ℹ️ Hướng dẫn sử dụng
+                        ℹ️ CHÚ THÍCH
                     </h3>
                     <div class="space-y-6 text-gray-600 dark:text-gray-300 leading-relaxed">
-                        <p><strong>Biểu Đồ Loại Kho:</strong> Hiển thị tổng lượng hàng nhập vào mỗi loại kho. Sử dụng bộ lọc để phân tích theo vùng miền, loại kho hoặc đơn vị tính cụ thể.</p>
-                        <p><strong>Biểu Đồ Hàng Hóa:</strong> Hiển thị xu hướng nhập/xuất hàng hóa qua các ngày. Lọc theo vùng, loại kho hoặc hàng hóa cụ thể để theo dõi chi tiết.</p>
+                        <p><strong>Biến Động Hàng Hoá Theo Kho:</strong> Hiển thị tổng lượng tồn kho của các kho theo mặt hàng. Sử dụng bộ lọc để phân tích theo vùng miền, loại kho và hàng hoá.</p>
+                        <p><strong> Biểu Động Tồn Kho Theo Danh Mục Hàng Hoá:</strong> Hiển thị lượng tồn kho của các mặt hàng theo kho. Lọc theo vùng, loại kho, kho và các hàng hoá để theo dõi chi tiết.</p>
                         <p><strong>Bảng Cân Đối:</strong> Cung cấp chi tiết đầy đủ về tồn kho (tồn đầu kỳ, nhập, xuất, tồn cuối kỳ) cho mỗi hàng hóa trong kho.</p>
                     </div>
                 </section>
