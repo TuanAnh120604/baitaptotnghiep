@@ -100,6 +100,14 @@ $hang_hoa_list = $pdo->query("
     ORDER BY ten_hang
 ")->fetchAll(PDO::FETCH_ASSOC);
 
+// AJAX endpoint để lấy mã phiếu mới
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ajax_get_ma_phieu'])) {
+    $loai = $_GET['loai'] ?? 'vat_tu';
+    $ma_phieu = taoMaPhieuXuatTuDong($pdo, $loai);
+    echo json_encode(['ma_phieu' => $ma_phieu]);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $loai_phieu     = $_POST['loai_phieu'] ?? 'vat_tu'; // 'vat_tu' hoặc 'thanh_pham'
     $ma_phieu_xuat  = trim($_POST['ma_phieu_xuat'] ?? '');
@@ -321,7 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <a href="phieuxuat.php" class="flex-1 px-4 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
                                         Xem danh sách
                                     </a>
-                                    <button onclick="location.reload()" class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors">
+                                    <button onclick="resetFormAndCloseModal()" class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors">
                                         Thêm tiếp
                                     </button>
                                 </div>
@@ -805,6 +813,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Submit form
             const form = document.getElementById('phieuXuatForm');
             form.submit();
+        }
+
+        // Reset form và cập nhật mã phiếu khi click "Thêm tiếp"
+        async function resetFormAndCloseModal() {
+            const modal = document.getElementById('successModal');
+            const loaiPhieu = document.getElementById('loai_phieu').value;
+            
+            try {
+                // Lấy mã phiếu mới từ server
+                const response = await fetch(`?ajax_get_ma_phieu=1&loai=${loaiPhieu}`);
+                const data = await response.json();
+                
+                if (data.ma_phieu) {
+                    // Cập nhật mã phiếu trong form
+                    document.getElementById('ma_phieu_xuat').value = data.ma_phieu;
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy mã phiếu mới:', error);
+            }
+            
+            // Ẩn modal
+            modal.style.display = 'none';
+            
+            // Reset form
+            const form = document.getElementById('phieuXuatForm');
+            
+            // Reset các field nhập liệu (giữ lại ngày hiện tại)
+            document.getElementById('ma_dai_ly').value = '';
+            document.getElementById('ma_loai_kho').value = '';
+            document.getElementById('ma_kho').value = '';
+            document.getElementById('nguoi_nhan').value = '';
+            document.getElementById('don_vi_nhan').value = '';
+            document.getElementById('ghi_chu').value = '';
+            
+            // Reset table chi tiết
+            const tbody = document.querySelector('#chiTietTable tbody');
+            tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-text-secondary">Chọn loại kho để hiển thị danh sách mặt hàng...</td></tr>';
+            
+            // Reset tổng tiền
+            document.getElementById('tongTien').textContent = '0 đ';
+            rowIndex = 0;
         }
 
         // Khởi tạo

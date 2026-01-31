@@ -104,6 +104,14 @@ $hang_hoa_list = $pdo->query("
     ORDER BY ten_hang
 ")->fetchAll(PDO::FETCH_ASSOC);
 
+// AJAX endpoint để lấy mã phiếu mới
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ajax_get_ma_phieu'])) {
+    $loai = $_GET['loai'] ?? 'vat_tu';
+    $ma_phieu = taoMaPhieuNhapTuDong($pdo, $loai);
+    echo json_encode(['ma_phieu' => $ma_phieu]);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $loai_phieu    = $_POST['loai_phieu'] ?? 'vat_tu'; // 'vat_tu' hoặc 'thanh_pham'
     $ma_phieu_nhap = trim($_POST['ma_phieu_nhap'] ?? '');
@@ -172,8 +180,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // cap_nhat_the_kho_theo_phieu($pdo, $ma_kho, $ds_ma_hang);
 
             $success_message = 'Thêm phiếu nhập thành công! Phiếu đang chờ thủ kho xác nhận.';
-            header("Location: phieunhap.php?highlight=" . urlencode($ma_phieu_nhap));
-            exit;
         } catch (Exception $e) {
             // $pdo->rollBack();
             $error_message = 'Lỗi: ' . $e->getMessage();
@@ -269,13 +275,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php endif; ?>
 
                     <?php if ($success_message): ?>
-                        <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex gap-3">
-                            <span class="material-symbols-outlined text-green-600">check_circle</span>
-                            <div>
-                                <p class="font-medium text-green-800 dark:text-green-300"><?= htmlspecialchars($success_message) ?></p>
-                                <p class="text-xs text-green-600 dark:text-green-500 mt-1">Đang chuyển về danh sách...</p>
+                        <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
+                            <div class="bg-white dark:bg-surface-dark rounded-xl shadow-2xl max-w-md w-full p-8 text-center">
+                                <div class="mb-4 flex justify-center">
+                                    <span class="material-symbols-outlined text-6xl text-green-500">check_circle</span>
+                                </div>
+                                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Thành công!</h3>
+                                <p class="text-gray-600 dark:text-gray-300 mb-6"><?= htmlspecialchars($success_message) ?></p>
+                                <div class="flex gap-3">
+                                    <a href="phieunhap.php" class="flex-1 px-4 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                                        Xem danh sách
+                                    </a>
+                                    <button onclick="resetFormAndCloseModal()" class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors">
+                                        Thêm tiếp
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                        <script>
+                            // Tự động hide modal sau 10 giây nếu user không bấm
+                            setTimeout(() => {
+                                const modal = document.getElementById('successModal');
+                                if (modal) {
+                                    modal.style.opacity = '0';
+                                    modal.style.transition = 'opacity 0.3s ease-out';
+                                    setTimeout(() => {
+                                        window.location.href = 'phieunhap.php';
+                                    }, 300);
+                                }
+                            }, 10000);
+                        </script>
                     <?php endif; ?>
 
                     <form method="POST" id="phieuNhapForm">
@@ -752,6 +781,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Submit form
             const form = document.getElementById('phieuNhapForm');
             form.submit();
+        }
+
+        // Reset form và cập nhật mã phiếu khi click "Thêm tiếp"
+        async function resetFormAndCloseModal() {
+            const modal = document.getElementById('successModal');
+            const loaiPhieu = document.getElementById('loai_phieu').value;
+            
+            try {
+                // Lấy mã phiếu mới từ server
+                const response = await fetch(`?ajax_get_ma_phieu=1&loai=${loaiPhieu}`);
+                const data = await response.json();
+                
+                if (data.ma_phieu) {
+                    // Cập nhật mã phiếu trong form
+                    document.getElementById('ma_phieu_nhap').value = data.ma_phieu;
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy mã phiếu mới:', error);
+            }
+            
+            // Ẩn modal
+            modal.style.display = 'none';
+            
+            // Reset form
+            const form = document.getElementById('phieuNhapForm');
+            
+            // Reset các field nhập liệu (giữ lại ngày hiện tại)
+            document.getElementById('ma_ncc').value = '';
+            document.getElementById('ma_loai_kho').value = '';
+            document.getElementById('ma_kho').value = '';
+            document.getElementById('don_vi_giao').value = '';
+            document.getElementById('nguoi_giao').value = '';
+            document.getElementById('ghi_chu').value = '';
+            
+            // Reset table chi tiết
+            const tbody = document.querySelector('#chiTietTable tbody');
+            tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-text-secondary">Chọn loại kho để hiển thị danh sách mặt hàng...</td></tr>';
+            
+            // Reset tổng tiền
+            document.getElementById('tongTien').textContent = '0 đ';
+            rowIndex = 0;
         }
 
         // Khởi tạo
