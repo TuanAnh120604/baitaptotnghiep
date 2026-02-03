@@ -98,14 +98,15 @@ echo "\xEF\xBB\xBF"; // BOM UTF-8
 <?php
 /* --------------------------------------------------------------------------
    PHẦN 3: BẢNG 1 - TỔNG HỢP TOÀN HỆ THỐNG
-   (Cộng gộp tất cả các kho lại để xem tổng quan)
+   (Đã cập nhật: Thêm Min/Max và Trạng thái vào đây)
 -------------------------------------------------------------------------- */
 
 $sql1 = "
 SELECT 
     hh.ma_hang, hh.ten_hang, hh.don_vi_tinh,
+    hh.muc_du_tru_min, hh.muc_du_tru_max, -- Lấy thêm Min/Max
     
-    /* Tổng Nhập Trong Kỳ (Tất cả kho user được xem) */
+    /* Tổng Nhập Trong Kỳ */
     (SELECT COALESCE(SUM(ct.so_luong_nhap), 0)
      FROM ct_phieu_nhap ct JOIN phieu_nhap pn ON ct.ma_phieu_nhap = pn.ma_phieu_nhap
      JOIN kho k ON pn.ma_kho = k.ma_kho
@@ -121,7 +122,7 @@ SELECT
        AND k.ma_loai_kho = :ma_loai_kho $kho_filter
     ) AS xuat_tk,
 
-    /* Tổng Nhập Lũy Kế (Tính tồn đầu) */
+    /* Tổng Nhập Lũy Kế */
     (SELECT COALESCE(SUM(ct.so_luong_nhap), 0)
      FROM ct_phieu_nhap ct JOIN phieu_nhap pn ON ct.ma_phieu_nhap = pn.ma_phieu_nhap
      JOIN kho k ON pn.ma_kho = k.ma_kho
@@ -129,7 +130,7 @@ SELECT
        AND k.ma_loai_kho = :ma_loai_kho $kho_filter
     ) AS nhap_dau_ky,
 
-    /* Tổng Xuất Lũy Kế (Tính tồn đầu) */
+    /* Tổng Xuất Lũy Kế */
     (SELECT COALESCE(SUM(ct.so_luong_xuat), 0)
      FROM ct_phieu_xuat ct JOIN phieu_xuat px ON ct.ma_phieu_xuat = px.ma_phieu_xuat
      JOIN kho k ON px.ma_kho = k.ma_kho
@@ -158,6 +159,9 @@ $stmt1->execute($params_common);
             <th>Tổng Nhập</th>
             <th>Tổng Xuất</th>
             <th>Tổng Tồn cuối</th>
+            <th>Min</th>
+            <th>Max</th>
+            <th>Trạng thái</th>
         </tr>
     </thead>
     <tbody>
@@ -171,6 +175,20 @@ $stmt1->execute($params_common);
 
         if ($ton_dau == 0 && $nhap == 0 && $xuat == 0 && $ton_cuoi == 0) continue;
 
+        // --- Logic Trạng thái (Chuyển từ Bảng 2 lên đây) ---
+        $min = $r['muc_du_tru_min'];
+        $max = $r['muc_du_tru_max'];
+        $status_text = "An toàn";
+        $status_class = "status-safe";
+
+        if ($ton_cuoi < $min) {
+            $status_text = "Thấp hơn Min";
+            $status_class = "status-low";
+        } elseif ($ton_cuoi > $max) {
+            $status_text = "Vượt quá Max";
+            $status_class = "status-high";
+        }
+
         echo "<tr style='font-size: 20px;'>
             <td>{$stt}</td>
             <td>{$r['ma_hang']}</td>
@@ -180,6 +198,9 @@ $stmt1->execute($params_common);
             <td>" . number_format($nhap) . "</td>
             <td>" . number_format($xuat) . "</td>
             <td class='text-bold'>" . number_format($ton_cuoi) . "</td>
+            <td>" . number_format($min) . "</td>
+            <td>" . number_format($max) . "</td>
+            <td class='{$status_class}'>{$status_text}</td>
         </tr>";
         $stt++;
     }
@@ -191,16 +212,16 @@ $stmt1->execute($params_common);
 
 <?php
 /* --------------------------------------------------------------------------
-   PHẦN 4: BẢNG 2 - CHI TIẾT TỪNG KHO & TRẠNG THÁI
-   (Tách riêng từng kho, có cảnh báo Min/Max)
+   PHẦN 4: BẢNG 2 - CHI TIẾT TỪNG KHO
+   (Đã cập nhật: Xóa Min/Max/Trạng thái khỏi đây)
 -------------------------------------------------------------------------- */
 
 $sql2 = "
 SELECT 
     k.ma_kho, k.ten_kho,
-    hh.ma_hang, hh.ten_hang, hh.don_vi_tinh, hh.muc_du_tru_min, hh.muc_du_tru_max,
+    hh.ma_hang, hh.ten_hang, hh.don_vi_tinh,
 
-    /* Nhập trong kỳ (Theo từng kho) */
+    /* Nhập trong kỳ */
     (SELECT COALESCE(SUM(ct.so_luong_nhap), 0)
      FROM ct_phieu_nhap ct JOIN phieu_nhap pn ON ct.ma_phieu_nhap = pn.ma_phieu_nhap
      WHERE ct.ma_hang = hh.ma_hang AND pn.ma_kho = k.ma_kho 
@@ -238,7 +259,7 @@ $stmt2 = $pdo->prepare($sql2);
 $stmt2->execute($params_common);
 ?>
 
-<div class="section-title">II. BẢNG CHI TIẾT TỒN KHO & CẢNH BÁO AN TOÀN</div>
+<div class="section-title">II. BẢNG CHI TIẾT TỒN KHO</div>
 <table border='1'>
     <thead>
         <tr class="bg-header-2">
@@ -251,9 +272,6 @@ $stmt2->execute($params_common);
             <th>Nhập</th>
             <th>Xuất</th>
             <th>Tồn cuối</th>
-            <th>Min</th>
-            <th>Max</th>
-            <th>Trạng thái</th>
         </tr>
     </thead>
     <tbody>
@@ -272,20 +290,6 @@ $stmt2->execute($params_common);
         
         $hasData = true;
 
-        // Logic Trạng thái
-        $min = $r['muc_du_tru_min'];
-        $max = $r['muc_du_tru_max'];
-        $status_text = "An toàn";
-        $status_class = "status-safe";
-
-        if ($ton_cuoi < $min) {
-            $status_text = "Thấp hơn Min";
-            $status_class = "status-low";
-        } elseif ($ton_cuoi > $max) {
-            $status_text = "Vượt quá Max";
-            $status_class = "status-high";
-        }
-
         echo "<tr style='font-size: 20px;'>
             <td>{$stt}</td>
             <td class='text-left text-bold'>{$r['ten_kho']}</td>
@@ -296,15 +300,12 @@ $stmt2->execute($params_common);
             <td>" . number_format($nhap) . "</td>
             <td>" . number_format($xuat) . "</td>
             <td class='text-bold'>" . number_format($ton_cuoi) . "</td>
-            <td>" . number_format($min) . "</td>
-            <td>" . number_format($max) . "</td>
-            <td class='{$status_class}'>{$status_text}</td>
         </tr>";
         $stt++;
     }
 
     if (!$hasData) {
-        echo "<tr><td colspan='12'>Không có dữ liệu phát sinh trong kỳ này.</td></tr>";
+        echo "<tr><td colspan='9'>Không có dữ liệu phát sinh trong kỳ này.</td></tr>";
     }
     ?>
     </tbody>
