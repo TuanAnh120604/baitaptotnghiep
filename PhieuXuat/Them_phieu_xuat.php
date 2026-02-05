@@ -272,12 +272,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="phieuxuat.php" class="text-text-secondary hover:text-primary">
                     <span class="material-symbols-outlined">arrow_back</span>
                 </a>
-                <h1 class="text-xl font-bold">Thêm phiếu xuất Kho</h1>
+                <h1 class="text-xl font-bold">Phiếu xuất Kho</h1>
             </div>
         </header>
 
         <main class="flex-1 overflow-y-auto p-6">
-            <div class="max-w-5xl mx-auto">
+            <?php if ($has_thanh_pham): ?>
+            <div class="h-full flex gap-6">
+                <!-- Left Panel: Lệnh xuất cho đại lý -->
+                <div class="w-1/2 flex flex-col">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden h-full flex flex-col">
+                        <div class="bg-primary text-white px-6 py-4 border-b border-border-light dark:border-border-dark">
+                            <h2 class="text-lg font-bold flex items-center gap-2">
+                                <span class="material-symbols-outlined">local_shipping</span>
+                                Lệnh xuất đến đại lý
+                            </h2>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-6 flex flex-col space-y-4">
+                            <!-- Chọn đại lý -->
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Chọn đại lý</label>
+                                <select id="dai_ly_filter" class="w-full px-4 py-2.5 border rounded-lg bg-background-light dark:bg-gray-800 focus:ring-2 focus:ring-primary" onchange="loadLenhXuat()">
+                                    <option value="">-- Chọn đại lý --</option>
+                                    <?php foreach ($dai_ly_list as $dl): ?>
+                                        <option value="<?= htmlspecialchars($dl['ma_dai_ly']) ?>"><?= htmlspecialchars($dl['ten_dai_ly']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <!-- Danh sách lệnh xuất -->
+                            <div class="flex-1 border rounded-lg overflow-hidden flex flex-col">
+                                <div id="phieu_xuat_list" class="flex-1 overflow-y-auto">
+                                    <div class="text-center text-text-secondary py-12">
+                                        <span class="material-symbols-outlined text-5xl block mb-4 opacity-20">inbox</span>
+                                        <p class="text-sm">Chọn đại lý để xem lệnh xuất</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Form tạo phiếu xuất (nằm trong cột phải) -->
+                <div class="w-1/2 flex flex-col">
+            <?php else: ?>
+            <div class="h-full w-full">
+                <div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-sm text-yellow-800 dark:text-yellow-200">
+                    ⚠️ Lệnh xuất cho đại lý chỉ hiển thị với quản lý kho <strong>thành phẩm</strong>. Nếu bạn cần quyền, hãy liên hệ quản trị.
+                </div>
+            <?php endif; ?>
+
                 <!-- Tab Navigation -->
                 <!-- Tab Navigation -->
                 <?php if ($has_vat_tu || $has_thanh_pham): ?>
@@ -626,18 +670,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return hangHoaList.filter(h => h.ma_loai_hang === maLoaiHang);
         }
 
-        function addRow(ma_hang = '', so_luong = '', don_gia = '') {
+        function addRow(ma_hang = '', so_luong = '', don_gia = '', skipLoaiKhoCheck = false) {
             const tbody = document.querySelector('#chiTietTable tbody');
             const maLoaiKho = document.getElementById('ma_loai_kho').value;
 
-            if (!maLoaiKho) {
+            let filteredHang = [];
+            if (skipLoaiKhoCheck) {
+                filteredHang = hangHoaList; // allow all
+            } else if (maLoaiKho) {
+                filteredHang = getFilteredHangHoa(maLoaiKho);
+            } else {
                 alert('Vui lòng chọn loại kho trước!');
                 return;
             }
 
-            const filteredHang = getFilteredHangHoa(maLoaiKho);
-
-            if (filteredHang.length === 0) {
+            if (filteredHang.length === 0 && !skipLoaiKhoCheck) {
                 alert('Không có mặt hàng nào thuộc loại kho này!');
                 return;
             }
@@ -647,6 +694,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             const row = document.createElement('tr');
+            row.dataset.autoFromLenh = ma_hang ? '1' : '';
             row.innerHTML = `
         <td class="px-4 py-3">
             <select name="hang_hoa[${rowIndex}][ma_hang]" required class="w-full px-3 py-2 border rounded-lg bg-background-light dark:bg-gray-800 focus:ring-2 focus:ring-primary" onchange="updateDonGia(this)">
@@ -666,7 +714,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </td>
         <td class="px-4 py-3 text-right font-medium" data-thanh-tien="0">0 đ</td>
         <td class="px-4 py-3 text-center">
-            <button type="button" onclick="this.closest('tr').remove(); tinhTong()" class="text-red-600 hover:text-red-800">
+            <button type="button" onclick="this.closest('tr').remove(); normalizeRowIndexes(); tinhTong()" class="text-red-600 hover:text-red-800">
                 <span class="material-symbols-outlined text-[20px]">delete</span>
             </button>
         </td>
@@ -675,7 +723,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (ma_hang) updateDonGia(row.querySelector('select'));
 
+            // Set quantity if provided
+            if (so_luong) {
+                const qtyInput = row.querySelector('input[name$="[so_luong]"]');
+                if (qtyInput) {
+                    qtyInput.value = so_luong;
+                    qtyInput.setAttribute('value', so_luong);
+                }
+            }
+
             rowIndex++;
+            normalizeRowIndexes();
+            tinhTong();
+        }
+
+        // Chuẩn hóa lại tên các input/select trong bảng theo chỉ số (đảm bảo gửi form đúng chỉ số liên tục)
+        function normalizeRowIndexes() {
+            const rows = Array.from(document.querySelectorAll('#chiTietTable tbody tr'));
+            rows.forEach((tr, idx) => {
+                const sel = tr.querySelector('select[name*="[ma_hang]"]');
+                if (sel) sel.name = `hang_hoa[${idx}][ma_hang]`;
+
+                const qty = tr.querySelector('input[name*="[so_luong]"]');
+                if (qty) qty.name = `hang_hoa[${idx}][so_luong]`;
+
+                const dg = tr.querySelector('input[name*="[don_gia]"]');
+                if (dg) dg.name = `hang_hoa[${idx}][don_gia]`;
+            });
+            rowIndex = rows.length;
         }
 
         function updateDonGia(select) {
@@ -854,6 +929,297 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Reset tổng tiền
             document.getElementById('tongTien').textContent = '0 đ';
             rowIndex = 0;
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'cho_xac_nhan': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                'da_xac_nhan': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                'da_huy': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+            };
+            return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+        }
+
+        // Tải danh sách lệnh xuất theo đại lý
+        async function loadLenhXuat() {
+            const maDaiLy = document.getElementById('dai_ly_filter')?.value;
+            const listContainer = document.getElementById('phieu_xuat_list');
+
+            if (!maDaiLy) {
+                if (listContainer) {
+                    listContainer.innerHTML = `
+                        <div class="text-center text-text-secondary py-12">
+                            <span class="material-symbols-outlined text-5xl block mb-4 opacity-20">inbox</span>
+                            <p class="text-sm">Chọn đại lý để xem lệnh xuất</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            try {
+                const resp = await fetch(`get_lenh_xuat_by_daily.php?ma_dai_ly=${encodeURIComponent(maDaiLy)}`);
+                const result = await resp.json();
+
+                if (result.error) {
+                    listContainer.innerHTML = `<div class="p-4 text-red-600">${result.error}</div>`;
+                    return;
+                }
+
+                if (!result.data || result.data.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="text-center text-text-secondary py-12">
+                            <span class="material-symbols-outlined text-5xl block mb-4 opacity-20">inbox</span>
+                            <p class="text-sm">Không có lệnh xuất</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '<div class="divide-y">';
+                result.data.forEach(phieu => {
+                    const isSelected = (typeof selectedLenh !== 'undefined' && selectedLenh && selectedLenh.MaLenh === phieu.MaLenh) ? 'ring-2 ring-primary' : '';
+                    html += `
+                        <div class="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${isSelected}" onclick="selectLenh('${phieu.MaLenh}')">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-semibold text-sm">${phieu.MaLenh}</span>
+                                <span class="text-xs px-2 py-1 rounded-full ${getStatusColor(phieu.TrangThai)}">
+                                    ${phieu.TrangThai}
+                                </span>
+                            </div>
+                            <div class="text-xs text-text-secondary space-y-1">
+                                <p><strong>Ngày lập:</strong> ${phieu.NgayLap}</p>
+                                <p><strong>Đại lý:</strong> ${phieu.ten_dai_ly || '-'}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                listContainer.innerHTML = html;
+            } catch (e) {
+                console.error('Lỗi tải lệnh xuất:', e);
+                if (listContainer) listContainer.innerHTML = `<div class="p-4 text-red-600">Lỗi: ${e.message}</div>`;
+            }
+        }
+
+        async function selectLenh(maLenh) {
+            try {
+                const res = await fetch(`../PhieuNhap/get_chi_tiet_phieu_giao.php?ma_phieu=${encodeURIComponent(maLenh)}`);
+                const result = await res.json();
+
+                if (result.error) {
+                    alert('Lỗi: ' + result.error);
+                    return;
+                }
+
+                selectedLenh = result.phieu;
+
+                // Reload list to highlight
+                await loadLenhXuat();
+
+                // Show detail
+                displayLenhXuatDetail(result);
+            } catch (err) {
+                console.error('Lỗi chọn lệnh:', err);
+                alert('Lỗi: ' + err.message);
+            }
+        }
+
+        function displayLenhXuatDetail(result) {
+            const phieu = result.phieu;
+            const chiTiet = result.chi_tiet;
+            const tongTien = result.tong_thanh_tien;
+
+            let detailHtml = `
+                <div class="space-y-4 text-sm">
+                    <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-text-secondary">Mã lệnh kho:</span>
+                            <span class="font-semibold">${phieu.MaLenh}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-text-secondary">Ngày lập:</span>
+                            <span>${phieu.NgayLap}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-text-secondary">Đại lý:</span>
+                            <span>${phieu.ten_dai_ly || '-'}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-text-secondary">Trạng thái:</span>
+                            <span class="px-2 py-1 rounded-full text-xs ${phieu.TrangThai === 'Xuat' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${phieu.TrangThai || '-'}</span>
+                        </div>
+                    </div>
+
+                    <!-- Chi tiết hàng hóa -->
+                    <div class="border rounded-lg overflow-hidden">
+                        <table class="w-full text-xs">
+                            <thead class="bg-gray-100 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Mặt hàng</th>
+                                    <th class="px-3 py-2 text-right">SL</th>
+                                    <th class="px-3 py-2 text-right">Đơn giá</th>
+                                    <th class="px-3 py-2 text-right">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                ${chiTiet.map(ct => `
+                                    <tr>
+                                        <td class="px-3 py-2">${ct.ten_hang}</td>
+                                        <td class="px-3 py-2 text-right">${ct.SoLuong}</td>
+                                        <td class="px-3 py-2 text-right">${Number(ct.don_gia).toLocaleString('vi-VN')}</td>
+                                        <td class="px-3 py-2 text-right">${Number(ct.SoLuong * ct.don_gia).toLocaleString('vi-VN')}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                        <div class="flex justify-between font-bold">
+                            <span>Tổng tiền:</span>
+                            <span>${Number(tongTien).toLocaleString('vi-VN')} đ</span>
+                        </div>
+                    </div>
+
+                    <!-- Nút xác nhận -->
+                    ${phieu.TrangThai === 'da_xac_nhan' ? `
+                        <div class="w-full px-4 py-3 bg-green-100 text-green-800 rounded-lg text-center font-medium">Đã xác nhận</div>
+                    ` : `
+                        <button type="button" onclick="confirmLenhXuat()" class="w-full px-4 py-3 bg-primary hover:bg-primary-hover text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            Xác nhận & Điền vào phiếu
+                        </button>
+                    `}
+                </div>
+            `;
+
+            const listContainer = document.getElementById('phieu_xuat_list');
+            listContainer.innerHTML = detailHtml;
+        }
+
+        // Xác nhận lệnh xuất và điền vào form bên phải
+        async function confirmLenhXuat() {
+            if (!selectedLenh) {
+                alert('Vui lòng chọn lệnh xuất');
+                return;
+            }
+
+            const phieu = selectedLenh;
+
+            try {
+                const resp = await fetch('../PhieuNhap/xac_nhan_lenh.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `ma_lenh=${encodeURIComponent(phieu.MaLenh)}`
+                });
+                const json = await resp.json();
+                if (!json.success) {
+                    alert('Không thể xác nhận lệnh: ' + (json.error || json.message));
+                    return;
+                }
+
+                // Cập nhật trạng thái local và reload danh sách
+                selectedLenh.TrangThai = 'da_xac_nhan';
+                await loadLenhXuat();
+                await selectLenh(phieu.MaLenh);
+
+            } catch (e) {
+                console.error('Lỗi xác nhận lệnh xuất:', e);
+                alert('Lỗi khi xác nhận lệnh xuất: ' + e.message);
+                return;
+            }
+
+            // Gán tab thành phẩm và chọn đại lý
+            switchTab('thanh_pham');
+            if (phieu.MaDaily) {
+                const dlSelect = document.getElementById('ma_dai_ly');
+                if (dlSelect) dlSelect.value = phieu.MaDaily;
+            }
+
+            // Lưu MaLenh để tra cứu
+            document.getElementById('phieuXuatForm').dataset.maLenh = phieu.MaLenh;
+
+            // Điền chi tiết vào bảng (bỏ qua kiểm tra loại kho)
+            const chiTiet = await loadChiTietLenhXuatWithRows();
+
+            // Nếu tất cả mặt hàng cùng loại, tự động set loại kho
+            try {
+                if (Array.isArray(chiTiet) && chiTiet.length > 0) {
+                    const loaiKhoSet = new Set();
+                    chiTiet.forEach(ct => {
+                        const hang = hangHoaList.find(h => h.ma_hang === ct.MaHang);
+                        if (hang) {
+                            Object.entries(loaiKhoToHangMap).forEach(([ma_loai_kho, ma_loai_hang]) => {
+                                if (ma_loai_hang === hang.ma_loai_hang) loaiKhoSet.add(ma_loai_kho);
+                            });
+                        }
+                    });
+
+                    if (loaiKhoSet.size === 1) {
+                        const loaiKho = Array.from(loaiKhoSet)[0];
+                        filterLoaiKhoOptions([loaiKho]);
+                        document.getElementById('ma_loai_kho').value = loaiKho;
+
+                        // Tự chọn kho nếu chỉ có 1 kho cho loại này
+                        const maKhoSelect = document.getElementById('ma_kho');
+                        maKhoSelect.innerHTML = '<option value="">-- Chọn kho --</option>';
+                        const filteredKho = khoList.filter(k => k.ma_loai_kho === loaiKho);
+                        filteredKho.forEach(k => {
+                            const opt = document.createElement('option');
+                            opt.value = k.ma_kho;
+                            opt.textContent = k.ten_kho;
+                            maKhoSelect.appendChild(opt);
+                        });
+
+                        if (filteredKho.length === 1) {
+                            maKhoSelect.value = filteredKho[0].ma_kho;
+                            await reloadTonKhoAllRows();
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Lỗi khi tự set kho:', err);
+            }
+
+            // Scroll to right panel
+            document.querySelector('.w-1/2:last-child').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            alert('Đã tự động điền mặt hàng & số lượng từ lệnh xuất. Vui lòng kiểm tra và chọn kho xuất nếu cần.');
+        }
+
+        // Tải chi tiết lệnh và thêm vào bảng
+        async function loadChiTietLenhXuatWithRows() {
+            if (!selectedLenh) return [];
+
+            try {
+                const res = await fetch(`../PhieuNhap/get_chi_tiet_phieu_giao.php?ma_phieu=${encodeURIComponent(selectedLenh.MaLenh)}`);
+                const result = await res.json();
+                if (result.error) {
+                    console.error('Lỗi:', result.error);
+                    alert('Lỗi khi lấy chi tiết lệnh: ' + result.error);
+                    return [];
+                }
+
+                const chiTiet = result.chi_tiet || [];
+                const tbody = document.querySelector('#chiTietTable tbody');
+                tbody.innerHTML = '';
+                rowIndex = 0;
+
+                for (const ct of chiTiet) {
+                    addRow(ct.MaHang, ct.SoLuong, ct.don_gia || '', true);
+                }
+
+                normalizeRowIndexes();
+                tinhTong();
+
+                return chiTiet;
+
+            } catch (err) {
+                console.error('Lỗi tải chi tiết lệnh xuất:', err);
+                alert('Không thể tải chi tiết lệnh xuất: ' + err.message);
+                return [];
+            }
         }
 
         // Khởi tạo

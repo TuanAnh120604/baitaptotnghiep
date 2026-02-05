@@ -5,10 +5,10 @@ include '../include/update_the_kho.php';
 
 header('Content-Type: application/json');
 
-// Chỉ thủ kho mới được xác nhận
+// Chỉ Thủ kho hoặc Quản lý kho mới được xác nhận
 $role = trim($_SESSION['role'] ?? '');
-if ($role !== 'Thủ kho') {
-    echo json_encode(['success' => false, 'error' => 'Chỉ thủ kho mới được xác nhận phiếu.']);
+if ($role !== 'Thủ kho' && $role !== 'Quản lý kho') {
+    echo json_encode(['success' => false, 'error' => 'Chỉ Thủ kho hoặc Quản lý kho mới được xác nhận phiếu.']);
     exit;
 }
 
@@ -35,15 +35,24 @@ try {
     $pdo->beginTransaction();
 
     if ($loai === 'nhap') {
-        // Kiểm tra phiếu có tồn tại và thuộc kho của thủ kho không
+        // Kiểm tra phiếu có tồn tại và người dùng có quyền xác nhận phiếu này (Thủ kho hoặc Quản lý kho)
         $check_sql = "
-            SELECT pn.ma_phieu_nhap, pn.ma_kho, pn.trang_thai, k.ma_nd
+            SELECT pn.ma_phieu_nhap, pn.ma_kho, pn.trang_thai, k.ma_nd, k.ma_vung, k.ma_loai_kho
             FROM phieu_nhap pn
             JOIN kho k ON pn.ma_kho = k.ma_kho
-            WHERE pn.ma_phieu_nhap = ? AND k.ma_nd = ?
+            WHERE pn.ma_phieu_nhap = ?
+            AND (
+                k.ma_nd = :ma_nd
+                OR EXISTS (
+                    SELECT 1 FROM phan_quyen pq 
+                    WHERE pq.ma_nd = :ma_nd2 
+                    AND pq.ma_vung = k.ma_vung 
+                    AND pq.ma_loai_kho = k.ma_loai_kho
+                )
+            )
         ";
         $check_stmt = $pdo->prepare($check_sql);
-        $check_stmt->execute([$ma_phieu, $ma_nd]);
+        $check_stmt->execute([$ma_phieu, ':ma_nd' => $ma_nd, ':ma_nd2' => $ma_nd]);
         $phieu = $check_stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$phieu) {

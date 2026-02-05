@@ -40,32 +40,7 @@ include '../include/connect.php';
                 </div>
 
                 <!-- Grid các thẻ báo cáo -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    <a href="baocao_chart1_loai_kho.php"
-                        class="group bg-white dark:bg-gray-700 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-t-4 border-blue-600 flex flex-col h-full min-h-[420px]">
-
-                        <div class="pt-10 pb-6 text-center text-6xl text-blue-600">📊</div>
-                        <h2 class="px-6 text-2xl font-bold text-center text-gray-800 dark:text-gray-100 min-h-[60px] flex items-center justify-center">
-                            Biến động hàng hoá theo kho
-                        </h2>
-                        <p class="px-6 mt-3 text-gray-600 dark:text-gray-300 text-center text-sm">
-                            Biểu đồ biểu diễn lượng tồn kho của mặt hàng với các kho.
-                        </p>
-                        <div class="px-6 mt-4 text-sm text-gray-500 dark:text-gray-400 flex-grow">
-                            <strong class="block mb-2">Bộ lọc:</strong>
-                            <ul class="list-disc pl-5 space-y-1">
-                                <li>Vùng miền</li>
-                                <li>Loại kho</li>
-                                <li>Hàng hóa</li>
-                                <li>Khoảng thời gian</li>
-                            </ul>
-                        </div>
-                        <div class="px-6 pb-8 mt-6">
-                            <div class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-center transition-colors duration-200 group-hover:bg-blue-700">
-                                Xem báo cáo →
-                            </div>
-                        </div>
-                    </a>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                     <!-- Card 2 -->
                     <a href="baocao_chart2_hang_hoa.php"
                         class="group bg-white dark:bg-gray-700 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-t-4 border-blue-600 flex flex-col h-full min-h-[420px]">

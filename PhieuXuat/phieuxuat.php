@@ -164,8 +164,7 @@ function getDVNhan($row)
 
                     <?php if (canCreate('phieuxuat')): ?>
                         <a href="Them_phieu_xuat.php" class="flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-                            <span class="material-symbols-outlined text-[16px]">add</span>
-                            <span class="text-[14px]">Thêm phiếu xuất mới</span>
+                            <span class="text-[14px]">Lệnh xuất kho</span>
                         </a>
                     <?php endif; ?>
                 </div>
